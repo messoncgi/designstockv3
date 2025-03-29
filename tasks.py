@@ -7,10 +7,10 @@ from playwright.sync_api import sync_playwright
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-import mimetypes # Importado para mimetype no upload
+import mimetypes
 
 # --- Funções Auxiliares (Inalteradas) ---
-
+# (get_drive_service_from_credentials e solve_captcha continuam iguais)
 def get_drive_service_from_credentials(credentials_base64_str):
     SCOPES = ['https://www.googleapis.com/auth/drive']
     try:
@@ -25,7 +25,6 @@ def get_drive_service_from_credentials(credentials_base64_str):
         credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
         return build('drive', 'v3', credentials=credentials)
     except Exception as e: print(f"[TASK ERROR] Erro ao criar serviço Google Drive: {e}"); return None
-
 
 def solve_captcha(page, captcha_api_key, url_login):
     captcha_element = page.locator("iframe[src*='recaptcha']")
@@ -58,7 +57,7 @@ def solve_captcha(page, captcha_api_key, url_login):
         return True
     return False
 
-# --- A Tarefa Principal do RQ (COM CAMINHO CORRIGIDO) ---
+# --- A Tarefa Principal do RQ (COM CAMINHO v1161 CORRETO!) ---
 
 def perform_designi_download_task(
     designi_url,
@@ -79,10 +78,9 @@ def perform_designi_download_task(
     os.makedirs(temp_dir, exist_ok=True)
     print(f"[TASK LOG] Usando diretório temp: {temp_dir}")
 
-    # --- CORREÇÃO: Definir caminho do executável para a VERSÃO CORRETA v1161 ---
-    # Baseado no log de build, a versão instalada é chromium-1161
-    chrome_executable_path = "/ms-playwright/chromium-1161/chrome-linux/chrome" # Caminho Principal
-    headless_shell_path = "/ms-playwright/chromium_headless_shell-1161/chrome-linux/headless_shell" # Caminho Fallback
+    # --- CORREÇÃO APLICADA: Usar caminho v1161 ---
+    chrome_executable_path = "/ms-playwright/chromium-1161/chrome-linux/chrome" # Caminho Principal com v1161
+    headless_shell_path = "/ms-playwright/chromium_headless_shell-1161/chrome-linux/headless_shell" # Caminho Fallback com v1161
 
     launch_options = {
         'headless': True,
@@ -98,25 +96,26 @@ def perform_designi_download_task(
         print(f"[TASK WARNING] Executável principal NÃO encontrado em {chrome_executable_path}. Usando fallback: {headless_shell_path}")
         launch_options['executable_path'] = headless_shell_path
     else:
-        # Se ambos falharem, lança erro ANTES de iniciar Playwright
+        # Se ambos falharem, retorna erro
         print(f"[TASK ERROR] CRÍTICO: Nenhum executável do navegador encontrado em caminhos esperados ({chrome_executable_path} ou {headless_shell_path}). Verifique o Dockerfile e a instalação.")
         return {
             'success': False,
             'error': f"Executável do navegador não encontrado.",
             'duration_seconds': time.time() - start_time
         }
+        # Fim da verificação do caminho do browser
 
+    # O restante da função permanece igual...
     try:
         with sync_playwright() as p:
             try:
                 print("[TASK LOG] Iniciando Chromium headless...")
-                # Passa as opções, incluindo executable_path se definido
-                browser = p.chromium.launch(**launch_options)
+                browser = p.chromium.launch(**launch_options) # Passa as opções com o caminho correto
                 context = browser.new_context(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
                 page = context.new_page()
                 page.set_default_timeout(90000)
 
-                # --- RESTANTE DA LÓGICA (Login, Navegação, Download, Upload - Inalterada) ---
+                # --- Lógica de Login, Navegação, Download, Upload (Inalterada) ---
                 print(f"[TASK LOG] Acessando página de login: {url_login}")
                 page.goto(url_login, wait_until='networkidle')
                 if not email or not senha: raise ValueError('Credenciais Designi não fornecidas.')
