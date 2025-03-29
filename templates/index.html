@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <style>
-        /* Estilos CSS mantidos como na versão anterior */
+        /* Estilos CSS Inalterados */
         .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; background: #f8f9fa; }
         .upload-area:hover { border-color: #0d6efd; background: #f1f3f5; }
         .loading { display: none; }
@@ -16,14 +16,13 @@
         .tutorial-step { margin-bottom: 10px; padding-left: 10px; }
         #historyItems .card { border-left: 3px solid #0d6efd; }
         #historyItems .alert { margin-bottom: 0; }
+        /* Estilo para item pendente */
+        .history-item-pending .spinner-border { width: 1rem; height: 1rem; border-width: .2em; margin-right: 0.5em; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">DesignStock</a>
-            <span class="navbar-text text-light">BETA V1</span>
-        </div>
+        <div class="container"><a class="navbar-brand" href="#">DesignStock</a><span class="navbar-text text-light">BETA V1</span></div>
     </nav>
 
     <div class="container mt-4">
@@ -32,49 +31,26 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Baixe Arquivos Premium Grátis</h5>
-                        <!-- REMOVIDO: Div #userStatus -->
+                        <!-- Status removido temporariamente -->
                         <ul class="nav nav-tabs mb-3" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab" aria-controls="freepikTab" aria-selected="true">Freepik</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab" aria-controls="designiTab" aria-selected="false">Designi</button>
-                            </li>
+                             <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab">Freepik</button></li>
+                             <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab">Designi</button></li>
                         </ul>
 
                         <div class="tab-content">
-                            <div class="tab-pane fade show active" id="freepikTab" role="tabpanel" aria-labelledby="freepik-tab">
+                            <div class="tab-pane fade show active" id="freepikTab" role="tabpanel">
                                 <form id="uploadForm">
                                     <div class="upload-area">
-                                        <div class="mb-3">
-                                            <label for="freepik_link" class="form-label">Link do Freepik</label>
-                                            <input type="text" class="form-control" id="freepik_link" name="freepik_link"
-                                                   placeholder="https://www.freepik.com/photo/12345678.htm" required>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span>
-                                            <span class="loading">
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...
-                                            </span>
-                                        </button>
+                                        <div class="mb-3"><label for="freepik_link" class="form-label">Link do Freepik</label><input type="text" class="form-control" id="freepik_link" name="freepik_link" placeholder="https://www.freepik.com/photo/12345678.htm" required></div>
+                                        <button type="submit" class="btn btn-primary"><span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span><span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span></button>
                                     </div>
                                 </form>
                             </div>
-
-                            <div class="tab-pane fade" id="designiTab" role="tabpanel" aria-labelledby="designi-tab">
+                            <div class="tab-pane fade" id="designiTab" role="tabpanel">
                                 <form id="designiForm" onsubmit="downloadDesigni(event)">
                                     <div class="upload-area">
-                                        <div class="mb-3">
-                                            <label for="designi_link" class="form-label">Link do Designi</label>
-                                            <input type="text" class="form-control" id="designi_link"
-                                                   placeholder="Cole aqui a URL do arquivo do Designi" required>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span>
-                                            <span class="loading">
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...
-                                            </span>
-                                        </button>
+                                        <div class="mb-3"><label for="designi_link" class="form-label">Link do Designi</label><input type="text" class="form-control" id="designi_link" placeholder="Cole aqui a URL do arquivo do Designi" required></div>
+                                        <button type="submit" class="btn btn-primary"><span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span><span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span></button>
                                     </div>
                                 </form>
                             </div>
@@ -87,43 +63,123 @@
 
                         <div class="tutorial-section">
                              <h6><i class="bi bi-info-circle"></i> Como Funciona</h6>
-                             <div class="tutorial-step">1. Cole o link (Freepik ou Designi) no campo correspondente.</div>
+                             <div class="tutorial-step">1. Cole o link (Freepik ou Designi) no campo.</div>
                              <div class="tutorial-step">2. Clique em "Baixar".</div>
                              <div class="tutorial-step">3. **Freepik:** Aguarde. O link do Google Drive aparecerá no histórico.</div>
-                             <div class="tutorial-step">4. **Designi:** Uma confirmação aparecerá. O arquivo será processado em segundo plano e estará no Google Drive em alguns minutos.</div>
-                             <!-- REMOVIDO: Passo sobre limite de downloads -->
+                             <div class="tutorial-step">4. **Designi:** Uma mensagem de "Processo iniciado..." aparecerá. Aguarde! O resultado final (link do Drive ou erro) substituirá essa mensagem no histórico quando estiver pronto.</div>
                         </div>
                     </div>
                 </div>
-
-                <div class="footer d-flex justify-content-between">
-                    <div>Feito com <i class="bi bi-heart-fill text-danger"></i> e com café</div>
-                    <div>BETA V1</div>
-                </div>
+                <div class="footer d-flex justify-content-between"><div>Feito com <i class="bi bi-heart-fill text-danger"></i></div><div>BETA V1</div></div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- REMOVIDO: Código relacionado a mensagens divertidas e updateStatusDisplay ---
+        // Armazena os intervalos de polling ativos para poder pará-los
+        const activePolls = {};
 
-        function addHistoryItem(contentHtml) {
+        function addHistoryItem(contentHtml, itemId = null) {
             const historyDiv = document.getElementById('historyItems');
             const newHistoryItem = document.createElement('div');
-            newHistoryItem.className = 'card mb-3'; // Adiciona classe para estilo
-            // Verifica se o conteúdo já é um alerta para não duplicar card-body
+            newHistoryItem.className = 'card mb-3 history-item'; // Classe genérica
+            if (itemId) {
+                newHistoryItem.id = `history-item-${itemId}`; // Define ID se fornecido
+            }
+            // Verifica se é alerta para ajustar padding
             if (contentHtml.includes('alert alert-')) {
-                 newHistoryItem.innerHTML = `<div class="card-body p-0">${contentHtml}</div>`; // Sem padding extra se for alerta
+                 newHistoryItem.innerHTML = `<div class="card-body p-0">${contentHtml}</div>`;
             } else {
-                 newHistoryItem.innerHTML = `<div class="card-body">${contentHtml}</div>`; // Envolve com card-body
+                 newHistoryItem.innerHTML = `<div class="card-body">${contentHtml}</div>`;
             }
             historyDiv.insertBefore(newHistoryItem, historyDiv.firstChild);
+            return newHistoryItem; // Retorna o elemento criado
         }
 
-        // --- REMOVIDO: Chamada inicial para fetchAndUpdateStatus ---
-        // window.addEventListener('DOMContentLoaded', fetchAndUpdateStatus);
+        // --- Função de Polling ---
+        function pollJobStatus(jobId) {
+            console.log(`[POLL] Iniciando polling para Job ID: ${jobId}`);
+            const historyItem = document.getElementById(`history-item-${jobId}`);
+            if (!historyItem) {
+                console.error(`[POLL] Item de histórico para ${jobId} não encontrado.`);
+                return; // Sai se não achar o item
+            }
 
+            const intervalId = setInterval(async () => {
+                try {
+                    console.log(`[POLL] Verificando status para ${jobId}...`);
+                    const response = await fetch(`/check_job/${jobId}`);
+
+                    if (!response.ok) {
+                        // Se o job não foi encontrado (404) ou outro erro de servidor
+                        console.error(`[POLL] Erro ${response.status} ao verificar ${jobId}. Parando polling.`);
+                        historyItem.innerHTML = `<div class="card-body"><div class="alert alert-danger mb-0">❌ Erro ao verificar status da tarefa (Status: ${response.status}).</div></div>`;
+                        clearInterval(intervalId);
+                        delete activePolls[jobId];
+                        return;
+                    }
+
+                    const data = await response.json();
+                    console.log(`[POLL] Status recebido para ${jobId}:`, data);
+
+                    if (data.status === 'finished') {
+                        console.log(`[POLL] Job ${jobId} concluído!`);
+                        clearInterval(intervalId);
+                        delete activePolls[jobId];
+                        // Atualiza o item do histórico com o resultado final
+                        if (data.result && data.result.success) {
+                            // SUCESSO DA TAREFA
+                            const result = data.result;
+                             const successHtml = `
+                                <div class="alert alert-success mb-0">✅ Download Designi concluído!</div>
+                                <div class="p-3">
+                                    <div class="mb-2"><strong>Arquivo:</strong> ${result.filename || 'Nome não disponível'}</div>
+                                    <div class="mb-2"><strong>ID:</strong> ${result.file_id}</div>
+                                    <div class="mb-0"><strong>Link:</strong><br><a href="${result.download_link}" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><i class="bi bi-download"></i> Baixar do Google Drive</a></div>
+                                </div>`;
+                             historyItem.innerHTML = `<div class="card-body p-0">${successHtml}</div>`; // Remove padding do card-body para alerta ficar ok
+                        } else {
+                            // FALHA DENTRO DA TAREFA (controlada)
+                            historyItem.innerHTML = `<div class="card-body"><div class="alert alert-warning mb-0">⚠️ Falha no processamento: ${data.result?.error || data.error || 'Erro desconhecido na tarefa.'}</div></div>`;
+                        }
+                    } else if (data.status === 'failed') {
+                        console.log(`[POLL] Job ${jobId} falhou!`);
+                        clearInterval(intervalId);
+                        delete activePolls[jobId];
+                        historyItem.innerHTML = `<div class="card-body"><div class="alert alert-danger mb-0">❌ Falha crítica na tarefa: ${data.error || 'Erro desconhecido.'}</div></div>`;
+                    } else {
+                        // Status 'queued', 'started', 'deferred', etc. Continua esperando.
+                        console.log(`[POLL] Job ${jobId} ainda em status: ${data.status}. Continuando polling...`);
+                        // Opcional: Adicionar um contador para parar após X tentativas
+                    }
+
+                } catch (error) {
+                    // Erro de rede durante o polling
+                    console.error(`[POLL] Erro de rede no polling para ${jobId}:`, error);
+                    historyItem.innerHTML = `<div class="card-body"><div class="alert alert-danger mb-0">❌ Erro de comunicação ao verificar status.</div></div>`;
+                    clearInterval(intervalId);
+                    delete activePolls[jobId];
+                }
+            }, 7000); // Verifica a cada 7 segundos (ajuste conforme necessário)
+
+            activePolls[jobId] = intervalId; // Guarda o ID do intervalo
+
+             // Adiciona um timeout máximo para o polling (ex: 30 minutos)
+            setTimeout(() => {
+                if (activePolls[jobId]) {
+                    console.warn(`[POLL] Timeout máximo atingido para ${jobId}. Parando polling.`);
+                    clearInterval(activePolls[jobId]);
+                    delete activePolls[jobId];
+                    if (historyItem.classList.contains('history-item-pending')) { // Só atualiza se ainda estiver pendente
+                         historyItem.innerHTML = `<div class="card-body"><div class="alert alert-warning mb-0">⏳ Tempo limite de verificação atingido. Verifique o Google Drive manualmente.</div></div>`;
+                    }
+                }
+            }, 30 * 60 * 1000); // 30 minutos em milissegundos
+        }
+
+
+        // --- Função Download Designi Atualizada ---
         async function downloadDesigni(event) {
             event.preventDefault();
             const form = document.getElementById('designiForm');
@@ -143,13 +199,23 @@
                 });
                 const data = await response.json();
 
-                if (response.ok && data.success) {
-                    addHistoryItem(`<div class="alert alert-info mb-0">✅ ${data.message || 'Download iniciado em segundo plano.'}</div>`);
-                    linkInput.value = ''; // Limpa input no sucesso
+                if (response.ok && data.success && data.job_id) {
+                    // SUCESSO AO ENFILEIRAR: Mostra mensagem inicial e inicia polling
+                    const initialMsgHtml = `
+                        <div class="alert alert-info mb-0 history-item-pending">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            ${data.message || 'Processo iniciado... Verificando status...'}
+                            <span class="text-muted small">(ID: ${data.job_id})</span>
+                        </div>`;
+                    const newItem = addHistoryItem(initialMsgHtml, data.job_id); // Adiciona e pega o elemento
+                    newItem.classList.add('history-item-pending'); // Adiciona classe para identificar
+                    linkInput.value = ''; // Limpa input
+                    pollJobStatus(data.job_id); // Inicia verificação
                 } else {
-                    addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro: ${data.error || `Erro ${response.status}.`}</div>`);
+                    // ERRO AO ENFILEIRAR
+                    addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro ao iniciar: ${data.error || `Erro ${response.status}.`}</div>`);
                 }
-                 // --- REMOVIDO: Chamada para fetchAndUpdateStatus ---
+                 // Sem atualização de status de limite aqui
             } catch (error) {
                 console.error('Erro no fetch para /download-designi:', error);
                 addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro de comunicação: ${error.message}</div>`);
@@ -159,6 +225,7 @@
             }
         }
 
+        // --- Event Listener Formulário Freepik (Inalterado) ---
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             const form = this;
@@ -175,15 +242,13 @@
                     body: new FormData(form)
                 });
                 const dataHtml = await response.text();
-
                 if (!response.ok) {
                      addHistoryItem(dataHtml || `<div class="alert alert-danger mb-0">❌ Erro ${response.status}.</div>`);
                 } else {
-                    // O backend retorna o HTML do card completo
                     addHistoryItem(dataHtml);
-                    linkInput.value = ''; // Limpa input no sucesso
+                    linkInput.value = '';
                 }
-                 // --- REMOVIDO: Chamada para fetchAndUpdateStatus ---
+                 // Sem atualização de status de limite aqui
             } catch (error) {
                 console.error('Erro no fetch para /upload:', error);
                 addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro de comunicação: ${error.message}</div>`);
@@ -192,6 +257,7 @@
                 loadingState.style.display = 'none';
             }
         });
+
     </script>
 </body>
 </html>
