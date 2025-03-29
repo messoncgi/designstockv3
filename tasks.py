@@ -12,7 +12,6 @@ import mimetypes # Importado para mimetype no upload
 # --- Funções Auxiliares (Inalteradas) ---
 
 def get_drive_service_from_credentials(credentials_base64_str):
-    # (Código desta função permanece o mesmo)
     SCOPES = ['https://www.googleapis.com/auth/drive']
     try:
         if not credentials_base64_str: print("[TASK ERROR] Variável GOOGLE_CREDENTIALS_BASE64 não configurada."); return None
@@ -29,7 +28,6 @@ def get_drive_service_from_credentials(credentials_base64_str):
 
 
 def solve_captcha(page, captcha_api_key, url_login):
-    # (Código desta função permanece o mesmo)
     captcha_element = page.locator("iframe[src*='recaptcha']")
     if captcha_element.count() > 0 and captcha_api_key:
         print("[TASK LOG] CAPTCHA detectado! Tentando resolver...")
@@ -60,7 +58,7 @@ def solve_captcha(page, captcha_api_key, url_login):
         return True
     return False
 
-# --- A Tarefa Principal do RQ (COM MODIFICAÇÃO) ---
+# --- A Tarefa Principal do RQ (COM CAMINHO CORRIGIDO) ---
 
 def perform_designi_download_task(
     designi_url,
@@ -77,36 +75,36 @@ def perform_designi_download_task(
     browser = None
     context = None
     start_time = time.time()
-    temp_dir = '/tmp/designi_downloads' # Usar /tmp no container
+    temp_dir = '/tmp/designi_downloads'
     os.makedirs(temp_dir, exist_ok=True)
     print(f"[TASK LOG] Usando diretório temp: {temp_dir}")
 
-    # --- MODIFICAÇÃO: Definir caminho do executável ---
-    # Baseado na imagem mcr.microsoft.com/playwright/python:v1.42.0-jammy
-    # e na variável PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-    # O browser Chromium v1105 deve estar neste caminho.
-    # Se você usar outra versão da imagem base, este número (1105) pode mudar!
-    chrome_executable_path = "/ms-playwright/chromium-1105/chrome-linux/chrome"
+    # --- CORREÇÃO: Definir caminho do executável para a VERSÃO CORRETA v1161 ---
+    # Baseado no log de build, a versão instalada é chromium-1161
+    chrome_executable_path = "/ms-playwright/chromium-1161/chrome-linux/chrome" # Caminho Principal
+    headless_shell_path = "/ms-playwright/chromium_headless_shell-1161/chrome-linux/headless_shell" # Caminho Fallback
+
     launch_options = {
         'headless': True,
         'args': ['--no-sandbox', '--disable-setuid-sandbox']
     }
 
-    # Verifica se o caminho existe ANTES de tentar usá-lo
+    # Verifica se o caminho principal existe
     if os.path.exists(chrome_executable_path):
         print(f"[TASK INFO] Usando caminho explícito para o executável: {chrome_executable_path}")
         launch_options['executable_path'] = chrome_executable_path
+    # Se não existir, TENTA o executável headless_shell como fallback
+    elif os.path.exists(headless_shell_path):
+        print(f"[TASK WARNING] Executável principal NÃO encontrado em {chrome_executable_path}. Usando fallback: {headless_shell_path}")
+        launch_options['executable_path'] = headless_shell_path
     else:
-        # Se não existir, lança um erro claro ANTES de tentar iniciar o Playwright
-        print(f"[TASK ERROR] CRÍTICO: Executável do navegador NÃO encontrado em {chrome_executable_path}. Verifique o Dockerfile e a instalação do Playwright.")
-        # Retorna um dicionário de falha imediatamente
+        # Se ambos falharem, lança erro ANTES de iniciar Playwright
+        print(f"[TASK ERROR] CRÍTICO: Nenhum executável do navegador encontrado em caminhos esperados ({chrome_executable_path} ou {headless_shell_path}). Verifique o Dockerfile e a instalação.")
         return {
             'success': False,
-            'error': f"Executável do navegador não encontrado em {chrome_executable_path}",
+            'error': f"Executável do navegador não encontrado.",
             'duration_seconds': time.time() - start_time
         }
-        # Ou pode lançar uma exceção:
-        # raise FileNotFoundError(f"Executável do navegador não encontrado em {chrome_executable_path}")
 
     try:
         with sync_playwright() as p:
@@ -116,11 +114,9 @@ def perform_designi_download_task(
                 browser = p.chromium.launch(**launch_options)
                 context = browser.new_context(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
                 page = context.new_page()
-                page.set_default_timeout(90000) # 90 segundos
+                page.set_default_timeout(90000)
 
-                # --- RESTANTE DA LÓGICA (Login, Navegação, Download, Upload) ---
-                # (O código daqui para baixo permanece o mesmo das versões anteriores)
-                # Exemplo:
+                # --- RESTANTE DA LÓGICA (Login, Navegação, Download, Upload - Inalterada) ---
                 print(f"[TASK LOG] Acessando página de login: {url_login}")
                 page.goto(url_login, wait_until='networkidle')
                 if not email or not senha: raise ValueError('Credenciais Designi não fornecidas.')
@@ -175,12 +171,12 @@ def perform_designi_download_task(
                 if 'page' in locals() and page and not page.is_closed():
                     try: page.screenshot(path=os.path.join(temp_dir, 'playwright_error_screenshot.png'))
                     except Exception as ss_err: print(f"[TASK WARNING] Não foi possível tirar screenshot erro: {ss_err}")
-                raise # Re-lança a exceção
+                raise
 
             finally:
                 if browser: print("[TASK LOG] Fechando navegador Playwright..."); browser.close(); print("[TASK LOG] Navegador fechado.")
 
-        # --- Upload Google Drive ---
+        # --- Upload Google Drive (Inalterado) ---
         if temp_file_path and os.path.exists(temp_file_path):
             print("[TASK LOG] Iniciando upload Google Drive...")
             drive_service = get_drive_service_from_credentials(drive_credentials_base64)
@@ -206,15 +202,10 @@ def perform_designi_download_task(
     except Exception as e:
         end_time = time.time(); duration = end_time - start_time
         error_message = f"Erro na tarefa download: {str(e)}"
-        # Simplificar log de erro para evitar recursão se o erro for na formatação
         print(f"[TASK FAILED] {error_message} (Duração: {duration:.2f}s)")
-        # Retorna dicionário de erro
         return {'success': False, 'error': error_message, 'duration_seconds': duration}
 
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             try: os.remove(temp_file_path); print(f"[TASK LOG] Temp removido: {temp_file_path}")
             except Exception as e_clean: print(f"[TASK WARNING] Erro remover temp {temp_file_path}: {e_clean}")
-        # Limpeza de screenshots (opcional)
-        # for f in os.listdir(temp_dir):
-        #      if f.endswith('.png'): try: os.remove(os.path.join(temp_dir, f)) except: pass

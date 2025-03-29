@@ -1,4 +1,4 @@
-# Dockerfile (Corrigido EXPOSE)
+# Dockerfile (Corrigido ls para v1161)
 
 # 1. Base Image: Usar a imagem oficial do Playwright
 FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
@@ -22,8 +22,8 @@ RUN echo "Installing/Verifying Playwright Chromium browser..." && \
     echo "Browser installation step completed." && \
     echo "Listing installed browsers directory:" && \
     ls -l $PLAYWRIGHT_BROWSERS_PATH/ && \
-    echo "Listing specific expected browser folder:" && \
-    ls -l $PLAYWRIGHT_BROWSERS_PATH/chromium-1105/
+    echo "Listing specific expected browser folder (v1161):" && \
+    ls -l $PLAYWRIGHT_BROWSERS_PATH/chromium-1161/ # <<< CORRIGIDO AQUI
 
 # 6. REMOVIDO: Bloco do Link Simbólico
 
@@ -33,7 +33,6 @@ RUN chmod +x /app/entrypoint.sh
 
 # 8. Expose Port (Documentação/Padrão)
 EXPOSE 10000
-# O comentário foi movido para a linha seguinte ou pode ser removido
 
 # 9. Define o ENTRYPOINT para usar o script
 ENTRYPOINT ["/app/entrypoint.sh"]
