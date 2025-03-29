@@ -1,0 +1,70 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+# Se você usa um ambiente virtual localmente (venv, .venv, etc.)
+.venv/
+venv/
+ENV/
+env/
+virtualenv/
+venv.bak/
+env.bak/
+
+# IDE and Editor folders / files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Local Environment Variables file
+# NUNCA envie seu arquivo .env para o Git!
+.env
+.env.*
+
+# Playwright downloaded browsers cache (geralmente fora do projeto, mas por segurança)
+/ms-playwright/
+/pw-browsers/
+# Se você definiu um caminho local específico para browsers:
+# playwright-browsers/
+
+# Arquivos temporários criados pela aplicação
+# A pasta que definimos em app.py
+arquivos_temporarios_app/
+# A pasta que definimos em tasks.py (embora seja /tmp no Docker)
+arquivos_temporarios/
+# Screenshots de erro (se você mantiver os nomes padrão)
+*.png
+
+# Arquivo de credenciais do Google (SE você o tiver na pasta do projeto localmente)
+# Lembre-se: a forma segura é usar a variável de ambiente GOOGLE_CREDENTIALS_BASE64
+service_account.json
+encoded-correct.txt
+
+# Arquivos de build ou distribuição (menos comum para Flask simples)
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Arquivos de log locais (se você gerar algum)
+*.log
+
+# Arquivos de teste (se você os gerar)
+htmlcov/
+.coverage
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# Docker-related files (geralmente não necessários para commit)
+docker-compose.override.yml
+
+# Outros arquivos específicos do seu ambiente local
+# Adicione aqui qualquer outro arquivo/pasta que não deva ir para o repositório
