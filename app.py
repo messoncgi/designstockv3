@@ -3,13 +3,12 @@ import json
 import re
 import base64
 import time
+import mimetypes # Importado para adivinhar mimetype
 from datetime import datetime
 from collections import defaultdict
 from flask import Flask, render_template, request, jsonify
 import requests
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+# Removido imports não usados diretamente aqui (google.oauth2, etc.)
 from redis import Redis
 from rq import Queue
 from dotenv import load_dotenv # Opcional, para .env
@@ -17,103 +16,135 @@ from dotenv import load_dotenv # Opcional, para .env
 # Carregar variáveis de ambiente do arquivo .env (se existir)
 load_dotenv()
 
-# Configurações do Designi
+# Configurações do Designi (Obtidas do ambiente)
 URL_LOGIN = os.getenv('DESIGNI_LOGIN_URL', 'https://designi.com.br/login')
-EMAIL = os.getenv('DESIGNI_EMAIL') # Removido valor padrão, deve ser configurado
-SENHA = os.getenv('DESIGNI_PASSWORD') # Removido valor padrão, deve ser configurado
-CAPTCHA_API_KEY = os.getenv('CAPTCHA_API_KEY') # Removido valor padrão
+EMAIL = os.getenv('DESIGNI_EMAIL')
+SENHA = os.getenv('DESIGNI_PASSWORD')
+CAPTCHA_API_KEY = os.getenv('CAPTCHA_API_KEY')
 
-# Configurações Freepik e Google Drive
-FREEPIK_API_KEY = os.getenv("FREEPIK_API_KEY") # Removido valor padrão
-FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18JkCOexQ7NdzVgmK0WvKyf53AHWKQyyV') # Mantido padrão se não definido
-GOOGLE_CREDENTIALS_BASE64 = os.getenv('GOOGLE_CREDENTIALS_BASE64') # NOVA variável
+# Configurações Freepik e Google Drive (Obtidas do ambiente)
+FREEPIK_API_KEY = os.getenv("FREEPIK_API_KEY")
+FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18JkCOexQ7NdzVgmK0WvKyf53AHWKQyyV')
+GOOGLE_CREDENTIALS_BASE64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
 
 # Configuração Flask e Redis
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-should-be-changed') # Mude isso em produção!
 
 # Conexão Redis (para RQ e limites de taxa)
-# Render injeta REDIS_URL automaticamente se um serviço Redis estiver linkado
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379') # Fallback para local
+redis_conn = None
+rq_queue = None
+
+# --- Bloco de Conexão Redis CORRIGIDO ---
 try:
-    # Configuração para compatibilidade com Upstash/Redis Cloud (TLS)
-    if 'rediss://' in REDIS_URL or 'upstash.io' in REDIS_URL or 'redis.com' in REDIS_URL:
-         redis_conn = Redis.from_url(REDIS_URL, ssl_cert_reqs=None)
-    else:
-         redis_conn = Redis.from_url(REDIS_URL)
+    # A URL 'rediss://' (ou 'redis://') fornecida já indica como conectar.
+    # Redis.from_url lida com isso automaticamente. Não precisamos de args extras para SSL se 'rediss://'.
+    redis_conn = Redis.from_url(REDIS_URL)
     redis_conn.ping() # Testa a conexão
-    print("[APP LOG] Conectado ao Redis com sucesso.")
+    print(f"[{'APP' if 'app.py' in __file__ else 'WORKER'} LOG] Tentando conectar ao Redis... Ping bem-sucedido!")
 except Exception as redis_err:
-     print(f"[APP ERROR] Falha ao conectar ao Redis em {REDIS_URL}: {redis_err}")
-     # Em um app real, você pode querer parar aqui ou usar um fallback
-     redis_conn = None # Define como None para checagens posteriores
+     print(f"[{'APP' if 'app.py' in __file__ else 'WORKER'} ERROR] Falha ao conectar ao Redis em {REDIS_URL}: {redis_err}")
+     # redis_conn permanecerá None
 
-# Fila RQ (usará a mesma conexão Redis)
+# Fila RQ (só inicializa se a conexão Redis funcionou)
 if redis_conn:
-    rq_queue = Queue("default", connection=redis_conn) # Usando a fila 'default'
+    try:
+        rq_queue = Queue("default", connection=redis_conn) # Usando a fila 'default'
+        print("[APP LOG] Fila RQ inicializada com sucesso.")
+    except Exception as rq_err:
+        print(f"[APP ERROR] Falha ao inicializar fila RQ: {rq_err}")
+        rq_queue = None # Garante que é None se falhar
 else:
-    rq_queue = None
     print("[APP WARNING] RQ não pode ser inicializado devido à falha na conexão Redis.")
-
 
 # Sistema de armazenamento em memória para limite de taxa (fallback se Redis falhar)
 class LocalStorageRateLimit:
+    # (Código da classe LocalStorageRateLimit permanece o mesmo da versão anterior)
     def __init__(self):
         self.data = defaultdict(lambda: {'count': 0, 'expiry': 0})
         print("[APP WARNING] Usando armazenamento local para limite de taxa (Redis indisponível).")
 
     def get(self, key):
         item = self.data[key]
-        if time.time() > item['expiry']:
-            del self.data[key]
-            return None
-        return str(item['count']).encode()
+        # Verifica se existe e se não expirou
+        if key not in self.data or (item['expiry'] != 0 and time.time() > item['expiry']):
+             if key in self.data: # Remove se expirou
+                 del self.data[key]
+             return None
+        return str(item['count']).encode() # Retorna como bytes, similar ao Redis
 
     def set(self, key, value, ex=None):
-        expiry_time = time.time() + ex if ex else float('inf')
+        # expiry = 0 significa sem expiração
+        expiry_time = time.time() + ex if ex else 0
         self.data[key] = {'count': int(value), 'expiry': expiry_time}
 
     def incr(self, key):
-        item = self.data[key]
-        # Se expirou, reseta antes de incrementar
-        if time.time() > item['expiry']:
-             item['count'] = 0
-             # Se não havia TTL, não define um novo aqui. set() define o TTL inicial.
-             # Se havia TTL, ele será reiniciado na próxima chamada a set() com ex.
-        item['count'] += 1
-        return item['count']
+        # Se a chave não existe ou expirou, inicializa/reseta para 1
+        current_value_raw = self.get(key) # Usa get para verificar expiração
+        if current_value_raw is None:
+             # Se não existe ou expirou, define como 1. Pega TTL do último set se existia.
+             # Nota: Não temos como saber o TTL original aqui facilmente, então o TTL não é reiniciado no incr.
+             # A expiração é controlada principalmente pela chamada inicial ao set().
+             expiry_time = self.data[key]['expiry'] if key in self.data else 0 # Mantem expiração se existia
+             self.data[key] = {'count': 1, 'expiry': expiry_time}
+             return 1
+        else:
+             # Se existe e é válida, incrementa
+             self.data[key]['count'] += 1
+             return self.data[key]['count']
 
 # Usa Redis se disponível, senão usa fallback local para limite de taxa
 rate_limiter = redis_conn if redis_conn else LocalStorageRateLimit()
 
-# Diretório temporário para uploads do Freepik (o worker usará /tmp)
+# Diretório temporário para uploads do Freepik
 APP_TEMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'arquivos_temporarios_app')
 os.makedirs(APP_TEMP_DIR, exist_ok=True)
 
-# --- Funções Auxiliares (Apenas as necessárias para o app web) ---
+# --- Funções Auxiliares ---
 
 def get_client_ip():
-    """Obtém o IP real do cliente, considerando proxies."""
+    # (Código da função get_client_ip permanece o mesmo da versão anterior)
     if request.headers.getlist("X-Forwarded-For"):
-        # Pega o primeiro IP da lista X-Forwarded-For
         client_ip = request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
     elif request.headers.get("X-Real-IP"):
         client_ip = request.headers.get("X-Real-IP").strip()
     else:
         client_ip = request.remote_addr or '127.0.0.1'
-    # Simples validação de formato IPv4/IPv6 (não muito rigorosa)
     if not re.match(r"^[0-9a-fA-F.:]+$", client_ip):
          print(f"[APP WARNING] IP detectado '{client_ip}' parece inválido, usando fallback 127.0.0.1")
-         return '127.0.0.1' # Fallback para IP inválido
+         return '127.0.0.1'
     return client_ip
 
 def get_drive_service():
-    """Cria o serviço do Drive usando a variável de ambiente (usado APENAS pelo /upload)."""
-    # A tarefa do worker usa get_drive_service_from_credentials
-    return get_drive_service_from_credentials(GOOGLE_CREDENTIALS_BASE64)
+    # (Código da função get_drive_service permanece o mesmo, usando GOOGLE_CREDENTIALS_BASE64)
+    # Esta função agora depende da função get_drive_service_from_credentials que está em tasks.py
+    # Para evitar duplicação, podemos importar ou chamar diretamente se necessário aqui,
+    # mas no momento ela só é usada pelo /upload. Vamos simplificar e assumir que as credenciais são válidas.
+    # Uma abordagem mais robusta seria ter uma função utilitária compartilhada.
+    # Por agora, vamos apenas recriar a lógica mínima necessária aqui ou importar de tasks.
+    # Importando de tasks é melhor:
+    try:
+        from tasks import get_drive_service_from_credentials # Tenta importar
+        return get_drive_service_from_credentials(GOOGLE_CREDENTIALS_BASE64)
+    except ImportError:
+        print("[APP ERROR] Não foi possível importar get_drive_service_from_credentials de tasks.py")
+        # Recriar lógica mínima como fallback (NÃO IDEAL - manter código DRY é melhor)
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+        SCOPES = ['https://www.googleapis.com/auth/drive']
+        try:
+            if not GOOGLE_CREDENTIALS_BASE64: return None
+            json_str = base64.b64decode(GOOGLE_CREDENTIALS_BASE64).decode('utf-8')
+            service_account_info = json.loads(json_str)
+            credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
+            return build('drive', 'v3', credentials=credentials)
+        except Exception as e:
+             print(f"[APP ERROR] Fallback get_drive_service falhou: {e}")
+             return None
 
 def limpar_arquivos_temporarios(directory, max_idade_horas=6):
-    """Limpa arquivos temporários antigos no diretório especificado."""
+    # (Código da função limpar_arquivos_temporarios permanece o mesmo da versão anterior)
     if not os.path.exists(directory):
         return
     try:
@@ -139,23 +170,30 @@ def limpar_arquivos_temporarios(directory, max_idade_horas=6):
     except Exception as e:
         print(f"[CLEANUP ERROR] Erro ao limpar diretório {directory}: {str(e)}")
 
+
 # --- Rotas Flask ---
 
 @app.route('/')
 def home():
-    # Limpa arquivos temporários do app web (não do worker) na home page
     limpar_arquivos_temporarios(APP_TEMP_DIR)
     return render_template('index.html')
 
 @app.route('/status')
 def user_status():
-    """Verifica o limite de downloads do usuário."""
+    # (Código da rota /status permanece o mesmo da versão anterior)
     if not rate_limiter:
-         return '<div class="alert alert-warning">Serviço de limite de taxa indisponível.</div>'
+         # Se rate_limiter for a classe LocalStorage, ainda funciona
+         if isinstance(rate_limiter, LocalStorageRateLimit):
+              print("[APP INFO] Usando fallback local para /status")
+              # Continuar com a lógica local
+         else:
+              return '<div class="alert alert-warning">Serviço de limite de taxa indisponível.</div>'
+
     try:
         client_ip = get_client_ip()
         downloads_key = f"downloads:{client_ip}"
-        downloads_hoje_raw = rate_limiter.get(downloads_key)
+        # Usar getattr para chamar get/set/incr de forma segura em redis ou fallback
+        downloads_hoje_raw = getattr(rate_limiter, 'get')(downloads_key)
         downloads_hoje = int(downloads_hoje_raw) if downloads_hoje_raw else 0
 
         limite_diario = 2 # Definir limite aqui
@@ -169,9 +207,10 @@ def user_status():
         print(f"[APP ERROR] Erro ao verificar status para IP {get_client_ip()}: {str(e)}")
         return '<div class="alert alert-danger">Erro ao verificar status de download.</div>'
 
+
 @app.route('/upload', methods=['POST'])
 def upload():
-    """Faz download do Freepik (STREAMING) e upload para o Google Drive."""
+    # (Código da rota /upload permanece o mesmo da versão anterior, com streaming, etc.)
     filename = None
     temp_file_path = None
     limite_diario = 2
@@ -181,13 +220,16 @@ def upload():
     if not GOOGLE_CREDENTIALS_BASE64:
          return "<div class='alert alert-danger'>❌ Credenciais do Google Drive não configuradas no servidor.</div>", 500
     if not rate_limiter:
-         return "<div class='alert alert-danger'>❌ Serviço de limite de taxa indisponível.</div>", 503
+        if isinstance(rate_limiter, LocalStorageRateLimit):
+             print("[APP INFO] Usando fallback local para limite /upload")
+        else:
+             return "<div class='alert alert-danger'>❌ Serviço de limite de taxa indisponível.</div>", 503
 
     try:
         # 1. Verificar limite de downloads
         client_ip = get_client_ip()
         downloads_key = f"downloads:{client_ip}"
-        downloads_hoje_raw = rate_limiter.get(downloads_key)
+        downloads_hoje_raw = getattr(rate_limiter, 'get')(downloads_key)
         downloads_hoje = int(downloads_hoje_raw) if downloads_hoje_raw else 0
 
         if downloads_hoje >= limite_diario:
@@ -238,14 +280,15 @@ def upload():
 
                 # Determinar nome e extensão do arquivo
                 content_disposition = r.headers.get('content-disposition')
+                filename = f"freepik_{image_id}.{file_format}" # Default filename
                 if content_disposition:
                     fname_match = re.search('filename="?([^"]+)"?', content_disposition)
                     if fname_match:
                         filename = fname_match.group(1)
-                if not filename:
-                     # Fallback usando ID e formato da API, ou extensão do Content-Type
+                if not filename or filename == f"freepik_{image_id}.unknown":
+                     # Fallback se não achou no content-disposition ou formato desconhecido
                      content_type = r.headers.get('content-type', '').split(';')[0]
-                     ext = mimetypes.guess_extension(content_type) or f".{file_format}" if file_format != 'unknown' else ".file"
+                     ext = mimetypes.guess_extension(content_type) or ".file"
                      filename = f"freepik_{image_id}{ext}"
 
                 # Sanitizar filename (básico)
@@ -281,6 +324,8 @@ def upload():
             return "<div class='alert alert-danger'>❌ Erro ao conectar com o Google Drive (serviço não obtido).</div>", 500
 
         try:
+            from googleapiclient.http import MediaFileUpload # Importar aqui onde é usado
+
             file_metadata = {'name': filename}
             if FOLDER_ID:
                 file_metadata['parents'] = [FOLDER_ID]
@@ -292,7 +337,7 @@ def upload():
             file = drive_service.files().create(
                 body=file_metadata,
                 media_body=media,
-                fields='id, webViewLink' # Corrigido
+                fields='id, webViewLink'
             ).execute()
 
             drive_service.permissions().create(
@@ -303,22 +348,24 @@ def upload():
 
         except Exception as drive_err:
             print(f"[APP ERROR] Erro durante upload para o Google Drive: {drive_err}")
-            return f"<div class='alert alert-danger'>❌ Erro ao fazer upload para o Google Drive: {str(drive_err)}</div>", 500
+            # Tentar dar mais detalhes se for erro de API Google
+            error_details = str(drive_err)
+            if hasattr(drive_err, 'resp') and hasattr(drive_err.resp, 'status'):
+                 error_details += f" (Status: {drive_err.resp.status})"
+            if hasattr(drive_err, '_get_reason'):
+                 error_details += f" Reason: {drive_err._get_reason()}"
+            return f"<div class='alert alert-danger'>❌ Erro ao fazer upload para o Google Drive: {error_details}</div>", 500
 
         # 6. Incrementar contador de downloads (SOMENTE SE TUDO DEU CERTO)
         try:
             if downloads_hoje == 0:
-                # Define com expiração de 24h (em segundos)
                 ttl_seconds = 86400
-                rate_limiter.set(downloads_key, 1, ex=ttl_seconds)
+                getattr(rate_limiter, 'set')(downloads_key, 1, ex=ttl_seconds)
                 print(f"[APP INFO] Primeiro download registrado para IP: {client_ip} (TTL: {ttl_seconds}s)")
             else:
-                # Apenas incrementa, o TTL original (se houver) é mantido pelo Redis
-                # Para o fallback local, o incr não renova o TTL, o que é ok.
-                new_count = rate_limiter.incr(downloads_key)
+                new_count = getattr(rate_limiter, 'incr')(downloads_key)
                 print(f"[APP INFO] Download incrementado para IP: {client_ip} (Novo total: {new_count})")
         except Exception as redis_inc_err:
-             # Falha ao incrementar não deve impedir o sucesso do download, mas logar
              print(f"[APP WARNING] Falha ao incrementar contador de download para {client_ip}: {redis_inc_err}")
 
 
@@ -336,37 +383,37 @@ def upload():
             <div class="text-muted small">{filename} • {datetime.now().strftime('%d/%m/%Y %H:%M')}</div>
         </div>
         """
-        return success_html, 200 # Status 200 OK
+        # Precisamos retornar o card completo, não apenas o card-body
+        return f'<div class="card mb-3"><div class="card-body">{success_html}</div></div>', 200
 
     except Exception as e:
-        # Captura qualquer outra exceção não tratada
         print(f"[APP ERROR] Erro inesperado na rota /upload: {str(e)}")
         import traceback
-        traceback.print_exc() # Imprime stack trace no log do servidor
+        traceback.print_exc()
         return f'<div class="alert alert-danger">⚠️ Erro inesperado no servidor: {str(e)}</div>', 500
 
     finally:
-        # Limpeza do arquivo temporário do upload, se existir
         if temp_file_path and os.path.exists(temp_file_path):
             try:
                 os.remove(temp_file_path)
                 print(f"[APP LOG] Arquivo temporário de upload removido: {temp_file_path}")
             except Exception as e_clean:
                 print(f"[APP WARNING] Erro ao remover arquivo temporário de upload {temp_file_path}: {str(e_clean)}")
-        # Limpeza geral periódica pode ser feita em outro lugar ou na home
-        # limpar_arquivos_temporarios(APP_TEMP_DIR)
-
 
 @app.route('/download-designi', methods=['POST'])
 def download_designi():
-    """Enfileira a tarefa de download do Designi para o worker RQ."""
+    # (Código da rota /download-designi permanece o mesmo da versão anterior)
     limite_diario = 2
 
     # Verificar dependências críticas
-    if not rq_queue:
-        return jsonify({'success': False, 'error': 'Serviço de background indisponível (RQ não conectado).'}), 503
+    if not rq_queue: # Verifica se a fila foi inicializada (depende da conexão Redis)
+        print("[APP ERROR] Tentativa de /download-designi mas RQ não está disponível.")
+        return jsonify({'success': False, 'error': 'Serviço de background indisponível (fila não conectada).'}), 503
     if not rate_limiter:
-        return jsonify({'success': False, 'error': 'Serviço de limite de taxa indisponível.'}), 503
+        if isinstance(rate_limiter, LocalStorageRateLimit):
+             print("[APP INFO] Usando fallback local para limite /download-designi")
+        else:
+             return jsonify({'success': False, 'error': 'Serviço de limite de taxa indisponível.'}), 503
     if not EMAIL or not SENHA:
         return jsonify({'success': False, 'error': 'Credenciais do Designi não configuradas no servidor.'}), 500
     if not GOOGLE_CREDENTIALS_BASE64:
@@ -376,7 +423,7 @@ def download_designi():
         # 1. Verificar limite de downloads
         client_ip = get_client_ip()
         downloads_key = f"downloads:{client_ip}"
-        downloads_hoje_raw = rate_limiter.get(downloads_key)
+        downloads_hoje_raw = getattr(rate_limiter, 'get')(downloads_key)
         downloads_hoje = int(downloads_hoje_raw) if downloads_hoje_raw else 0
 
         if downloads_hoje >= limite_diario:
@@ -404,21 +451,20 @@ def download_designi():
                     GOOGLE_CREDENTIALS_BASE64,
                     URL_LOGIN
                 ),
-                job_timeout=1800 # Timeout para a tarefa em si (30 minutos) - ajuste conforme necessário
-                # result_ttl=3600 # Quanto tempo manter o resultado no Redis (1h)
-                # failure_ttl=86400 # Quanto tempo manter falhas no Redis (24h)
+                job_timeout=1800, # Timeout para a tarefa em si (30 minutos)
+                result_ttl=3600, # Guardar resultado por 1h
+                failure_ttl=86400 # Guardar falhas por 24h
             )
             print(f"[APP LOG] Tarefa Designi enfileirada com ID: {job.id}")
 
             # 4. Incrementar contador (APÓS enfileirar com sucesso)
-            # Tratamento de erro para incremento é feito separadamente
             try:
                  if downloads_hoje == 0:
                      ttl_seconds = 86400
-                     rate_limiter.set(downloads_key, 1, ex=ttl_seconds)
+                     getattr(rate_limiter, 'set')(downloads_key, 1, ex=ttl_seconds)
                      print(f"[APP INFO] Primeiro download Designi registrado para IP: {client_ip} (TTL: {ttl_seconds}s)")
                  else:
-                     new_count = rate_limiter.incr(downloads_key)
+                     new_count = getattr(rate_limiter, 'incr')(downloads_key)
                      print(f"[APP INFO] Download Designi incrementado para IP: {client_ip} (Novo total: {new_count})")
             except Exception as redis_inc_err:
                  print(f"[APP WARNING] Falha ao incrementar contador (Designi) para {client_ip}: {redis_inc_err}")
@@ -428,25 +474,28 @@ def download_designi():
             return jsonify({
                 'success': True,
                 'message': 'Seu download foi iniciado em segundo plano. O link estará disponível no Google Drive em breve.',
-                'job_id': job.id # Opcional: pode ser usado para consultar status depois (não implementado aqui)
+                'job_id': job.id # Opcional: pode ser usado para consultar status depois
             }), 202 # HTTP 202 Accepted
 
         except Exception as enqueue_err:
             print(f"[APP ERROR] Falha ao enfileirar tarefa RQ: {enqueue_err}")
-            return jsonify({'success': False, 'error': 'Falha ao iniciar o processo de download em segundo plano.'}), 500
+            # Verificar se a fila existe (pode ser None se Redis falhou)
+            if not rq_queue:
+                 return jsonify({'success': False, 'error': 'Falha ao iniciar: Serviço de background não conectado.'}), 503
+            else:
+                 return jsonify({'success': False, 'error': 'Falha ao iniciar o processo de download em segundo plano.'}), 500
 
     except Exception as e:
-        # Captura qualquer outra exceção não tratada
         print(f"[APP ERROR] Erro inesperado na rota /download-designi: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': f'Erro inesperado no servidor: {str(e)}'}), 500
 
-# Execução Principal (para Gunicorn)
+# Execução Principal
 if __name__ == '__main__':
-    # Limpeza inicial (opcional, worker também pode fazer)
     print("[APP STARTUP] Limpando diretório temporário do app web...")
     limpar_arquivos_temporarios(APP_TEMP_DIR)
-    # A execução via 'flask run' é apenas para desenvolvimento local
-    # Gunicorn usará 'app:app' diretamente
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)), debug=False) # DEBUG FALSE em produção!
+    # Gunicorn geralmente é usado em produção, não app.run
+    # Se precisar rodar localmente para teste rápido (sem Gunicorn):
+    # app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)), debug=False)
+    pass # Em produção, Gunicorn chama 'app:app' diretamente
