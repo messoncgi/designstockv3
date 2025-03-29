@@ -1,4 +1,4 @@
-# Dockerfile (Atualizado para usar entrypoint.sh)
+# Dockerfile (Corrigido EXPOSE)
 
 # 1. Base Image: Usar a imagem oficial do Playwright
 FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
@@ -29,14 +29,13 @@ RUN echo "Installing/Verifying Playwright Chromium browser..." && \
 
 # 7. Copy Application Code AND entrypoint script
 COPY . .
-# Garante que o entrypoint tem permissão de execução dentro do container também
 RUN chmod +x /app/entrypoint.sh
 
 # 8. Expose Port (Documentação/Padrão)
-EXPOSE 10000 # O Render usa $PORT, mas expor é boa prática
+EXPOSE 10000
+# O comentário foi movido para a linha seguinte ou pode ser removido
 
 # 9. Define o ENTRYPOINT para usar o script
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-# 10. CMD removido ou comentado (ENTRYPOINT tem prioridade se ambos definidos)
-# CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:$PORT", "--workers", "3", "--timeout", "120", "--log-level=info"]
+# 10. CMD removido ou comentado
