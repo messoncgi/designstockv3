@@ -1,14 +1,12 @@
-# Dockerfile (Opção 1 - Sem Link Simbólico)
+# Dockerfile (Atualizado para usar entrypoint.sh)
 
 # 1. Base Image: Usar a imagem oficial do Playwright
 FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
-# Verifique se v1.42.0 é a versão desejada ou use 'latest-jammy'
 
 # 2. Set Environment Variables
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
-    # Caminho padrão dos browsers nesta imagem base (ESSENCIAL!)
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # 3. Set Working Directory
@@ -19,22 +17,26 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. Install/Verify Playwright Browsers
-# Garante que o Chromium está instalado no local esperado por PLAYWRIGHT_BROWSERS_PATH
-# O '--with-deps' é menos crucial aqui, mas não prejudica.
 RUN echo "Installing/Verifying Playwright Chromium browser..." && \
     playwright install --with-deps chromium && \
     echo "Browser installation step completed." && \
-    # Comando opcional para verificar onde o browser foi instalado (útil para debug no log de build):
     echo "Listing installed browsers directory:" && \
-    ls -l $PLAYWRIGHT_BROWSERS_PATH/
+    ls -l $PLAYWRIGHT_BROWSERS_PATH/ && \
+    echo "Listing specific expected browser folder:" && \
+    ls -l $PLAYWRIGHT_BROWSERS_PATH/chromium-1105/
 
-# 6. *** REMOVIDO: Bloco do Link Simbólico ***
+# 6. REMOVIDO: Bloco do Link Simbólico
 
-# 7. Copy Application Code
+# 7. Copy Application Code AND entrypoint script
 COPY . .
+# Garante que o entrypoint tem permissão de execução dentro do container também
+RUN chmod +x /app/entrypoint.sh
 
 # 8. Expose Port (Documentação/Padrão)
-EXPOSE 10000
+EXPOSE 10000 # O Render usa $PORT, mas expor é boa prática
 
-# 9. Default CMD (Será sobrescrito pelo Start Command do Render)
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:$PORT", "--workers", "3", "--timeout", "120", "--log-level=info"]
+# 9. Define o ENTRYPOINT para usar o script
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# 10. CMD removido ou comentado (ENTRYPOINT tem prioridade se ambos definidos)
+# CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:$PORT", "--workers", "3", "--timeout", "120", "--log-level=info"]
