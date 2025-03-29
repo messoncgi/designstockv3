@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesignStock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        /* Estilos CSS mantidos como na versão anterior */
+        .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; background: #f8f9fa; }
+        .upload-area:hover { border-color: #0d6efd; background: #f1f3f5; }
+        .loading { display: none; }
+        .tutorial-section { margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #0d6efd; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; }
+        .tutorial-step { margin-bottom: 10px; padding-left: 10px; }
+        #historyItems .card { border-left: 3px solid #0d6efd; }
+        #historyItems .alert { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">DesignStock</a>
+            <span class="navbar-text text-light">BETA V1</span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Baixe Arquivos Premium Grátis</h5>
+                        <!-- REMOVIDO: Div #userStatus -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab" aria-controls="freepikTab" aria-selected="true">Freepik</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab" aria-controls="designiTab" aria-selected="false">Designi</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="freepikTab" role="tabpanel" aria-labelledby="freepik-tab">
+                                <form id="uploadForm">
+                                    <div class="upload-area">
+                                        <div class="mb-3">
+                                            <label for="freepik_link" class="form-label">Link do Freepik</label>
+                                            <input type="text" class="form-control" id="freepik_link" name="freepik_link"
+                                                   placeholder="https://www.freepik.com/photo/12345678.htm" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span>
+                                            <span class="loading">
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="tab-pane fade" id="designiTab" role="tabpanel" aria-labelledby="designi-tab">
+                                <form id="designiForm" onsubmit="downloadDesigni(event)">
+                                    <div class="upload-area">
+                                        <div class="mb-3">
+                                            <label for="designi_link" class="form-label">Link do Designi</label>
+                                            <input type="text" class="form-control" id="designi_link"
+                                                   placeholder="Cole aqui a URL do arquivo do Designi" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span>
+                                            <span class="loading">
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div id="uploadHistory" class="mt-4">
+                            <h6 class="card-subtitle mb-3 text-center text-muted">Histórico de Respostas</h6>
+                            <div id="historyItems"></div>
+                        </div>
+
+                        <div class="tutorial-section">
+                             <h6><i class="bi bi-info-circle"></i> Como Funciona</h6>
+                             <div class="tutorial-step">1. Cole o link (Freepik ou Designi) no campo correspondente.</div>
+                             <div class="tutorial-step">2. Clique em "Baixar".</div>
+                             <div class="tutorial-step">3. **Freepik:** Aguarde. O link do Google Drive aparecerá no histórico.</div>
+                             <div class="tutorial-step">4. **Designi:** Uma confirmação aparecerá. O arquivo será processado em segundo plano e estará no Google Drive em alguns minutos.</div>
+                             <!-- REMOVIDO: Passo sobre limite de downloads -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer d-flex justify-content-between">
+                    <div>Feito com <i class="bi bi-heart-fill text-danger"></i> e com café</div>
+                    <div>BETA V1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- REMOVIDO: Código relacionado a mensagens divertidas e updateStatusDisplay ---
+
+        function addHistoryItem(contentHtml) {
+            const historyDiv = document.getElementById('historyItems');
+            const newHistoryItem = document.createElement('div');
+            newHistoryItem.className = 'card mb-3'; // Adiciona classe para estilo
+            // Verifica se o conteúdo já é um alerta para não duplicar card-body
+            if (contentHtml.includes('alert alert-')) {
+                 newHistoryItem.innerHTML = `<div class="card-body p-0">${contentHtml}</div>`; // Sem padding extra se for alerta
+            } else {
+                 newHistoryItem.innerHTML = `<div class="card-body">${contentHtml}</div>`; // Envolve com card-body
+            }
+            historyDiv.insertBefore(newHistoryItem, historyDiv.firstChild);
+        }
+
+        // --- REMOVIDO: Chamada inicial para fetchAndUpdateStatus ---
+        // window.addEventListener('DOMContentLoaded', fetchAndUpdateStatus);
+
+        async function downloadDesigni(event) {
+            event.preventDefault();
+            const form = document.getElementById('designiForm');
+            const linkInput = document.getElementById('designi_link');
+            const link = linkInput.value;
+            const normalState = form.querySelector('.normal-state');
+            const loadingState = form.querySelector('.loading');
+
+            normalState.style.display = 'none';
+            loadingState.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/download-designi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: link })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    addHistoryItem(`<div class="alert alert-info mb-0">✅ ${data.message || 'Download iniciado em segundo plano.'}</div>`);
+                    linkInput.value = ''; // Limpa input no sucesso
+                } else {
+                    addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro: ${data.error || `Erro ${response.status}.`}</div>`);
+                }
+                 // --- REMOVIDO: Chamada para fetchAndUpdateStatus ---
+            } catch (error) {
+                console.error('Erro no fetch para /download-designi:', error);
+                addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro de comunicação: ${error.message}</div>`);
+            } finally {
+                normalState.style.display = 'inline';
+                loadingState.style.display = 'none';
+            }
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = this;
+            const normalState = form.querySelector('.normal-state');
+            const loadingState = form.querySelector('.loading');
+            const linkInput = document.getElementById('freepik_link');
+
+            normalState.style.display = 'none';
+            loadingState.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+                const dataHtml = await response.text();
+
+                if (!response.ok) {
+                     addHistoryItem(dataHtml || `<div class="alert alert-danger mb-0">❌ Erro ${response.status}.</div>`);
+                } else {
+                    // O backend retorna o HTML do card completo
+                    addHistoryItem(dataHtml);
+                    linkInput.value = ''; // Limpa input no sucesso
+                }
+                 // --- REMOVIDO: Chamada para fetchAndUpdateStatus ---
+            } catch (error) {
+                console.error('Erro no fetch para /upload:', error);
+                addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro de comunicação: ${error.message}</div>`);
+            } finally {
+                normalState.style.display = 'inline';
+                loadingState.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
