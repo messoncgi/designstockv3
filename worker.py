@@ -1,19 +1,22 @@
 import os
 import sys
 from redis import Redis
-from rq import Worker, Queue # Importamos apenas Worker e Queue
+from rq import Worker, Queue
 from dotenv import load_dotenv
 from urllib.parse import urlparse
+try: from rq import Connection
+except ImportError: Connection = None; print("[WORKER WARNING] Não importou 'Connection' de 'rq'.")
 
 load_dotenv()
 
 # Configurações de Fila
 listen = ['default']
 
-# Conexão Redis (Mesma lógica de antes)
+# Conexão Redis
 REDIS_URL = os.environ.get('REDIS_URL')
 conn = None
 
+# --- Bloco de Conexão Redis com decode_responses=False ---
 if REDIS_URL:
     try:
         print(f"[WORKER LOG] Tentando conectar ao Redis usando URL: {REDIS_URL}")
@@ -21,11 +24,8 @@ if REDIS_URL:
         redis_host = parsed_url.hostname
         redis_port = parsed_url.port or 6379
         redis_password = parsed_url.password
-        use_ssl = parsed_url.scheme == 'rediss' or 'upstash.io' in redis_host
-
-        if not redis_host or not redis_password:
-             raise ValueError("Hostname ou Senha não encontrados na REDIS_URL")
-
+        use_ssl = parsed_url.scheme == 'rediss' or (redis_host and 'upstash.io' in redis_host)
+        if not redis_host or not redis_password: raise ValueError("Hostname/Senha não encontrados na REDIS_URL")
         print(f"[WORKER LOG] Conectando com: host={redis_host}, port={redis_port}, ssl={use_ssl}")
 
         conn = Redis(
@@ -34,37 +34,21 @@ if REDIS_URL:
             password=redis_password,
             ssl=use_ssl,
             ssl_cert_reqs=None,
-            # decode_responses=False # Manter False para RQ
+            decode_responses=False # <<-- MUDANÇA PRINCIPAL AQUI
         )
         conn.ping()
         print(f"[WORKER LOG] Conexão Redis estabelecida e ping bem-sucedido!")
+    except ValueError as ve: print(f"[WORKER ERROR] Erro ao parsear REDIS_URL: {ve}"); conn = None
+    except Exception as redis_err: import traceback; print(f"[WORKER ERROR] Falha detalhada ao conectar/pingar Redis:\n{traceback.format_exc()}"); conn = None
+else: print("[WORKER ERROR] Variável de ambiente REDIS_URL não definida."); conn = None
 
-    except ValueError as ve:
-        print(f"[WORKER ERROR] Erro ao parsear REDIS_URL: {ve}")
-        conn = None # Garante que é None em caso de falha
-    except Exception as redis_err:
-        import traceback
-        print(f"[WORKER ERROR] Falha detalhada ao conectar/pingar Redis:")
-        print(traceback.format_exc())
-        print(f"[WORKER ERROR] Falha ao conectar ao Redis (Host: {redis_host}, Porta: {redis_port}, SSL: {use_ssl}): {redis_err}")
-        conn = None
-else:
-    print("[WORKER ERROR] Variável de ambiente REDIS_URL não definida.")
-    conn = None
-
-
-# Iniciar o Worker RQ (Simplificado)
+# Iniciar o Worker RQ (Versão Simplificada)
 if __name__ == '__main__':
-    if conn: # Verifica se a conexão foi bem sucedida
+    if conn:
         try:
-            # Criar uma lista de objetos Queue a partir dos nomes em 'listen'
-            # Passando a conexão 'conn' diretamente para cada Queue
+            # Passa a conexão diretamente para Queues e Worker
             queues = [Queue(name, connection=conn) for name in listen]
-
-            # Instanciar o Worker, passando a lista de Queues
-            # O worker usará a conexão associada às filas
-            worker = Worker(queues, connection=conn) # Passar connection aqui também é seguro
-
+            worker = Worker(queues, connection=conn)
             print(f"[WORKER LOG] Worker RQ pronto, escutando filas: {', '.join(listen)}")
 
             # Limpeza inicial (mantido)
@@ -82,17 +66,15 @@ if __name__ == '__main__':
                  else: os.makedirs(temp_dir, exist_ok=True)
             except Exception as e_clean_init: print(f"[WORKER WARN] Erro limpar/criar dir worker: {e_clean_init}")
 
-            # Inicia o loop de processamento de tarefas (sem o 'with Connection...')
             print("[WORKER LOG] Iniciando processamento de tarefas...")
             worker.work(with_scheduler=False)
 
-            print("[WORKER LOG] Worker encerrado (isso normalmente não deve acontecer a menos que seja interrompido).")
+            print("[WORKER LOG] Worker encerrado.") # Não deve chegar aqui normalmente
 
         except Exception as main_err:
-             print(f"[WORKER ERROR] Erro inesperado ao configurar ou iniciar o worker: {main_err}")
+             print(f"[WORKER ERROR] Erro inesperado ao configurar/iniciar worker: {main_err}")
              import traceback; traceback.print_exc()
              sys.exit(1)
-
     else:
-        print("[WORKER ERROR] Worker não pode iniciar - Falha na conexão com o Redis.")
+        print("[WORKER ERROR] Worker não pode iniciar - Falha conexão Redis.")
         sys.exit(1)

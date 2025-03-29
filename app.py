@@ -5,12 +5,12 @@ import base64
 import time
 import mimetypes
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, abort # Abort adicionado
+from flask import Flask, render_template, request, jsonify # Removido abort (não usado)
 import requests
 from redis import Redis
 from rq import Queue
-from rq.job import Job # Importar Job para buscar status
-from rq.exceptions import NoSuchJobError # Importar exceção
+from rq.job import Job
+from rq.exceptions import NoSuchJobError
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 
@@ -29,11 +29,12 @@ GOOGLE_CREDENTIALS_BASE64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-should-be-changed')
 
-# Conexão Redis (Lógica de conexão com parâmetros separados mantida)
+# Conexão Redis
 REDIS_URL = os.environ.get('REDIS_URL')
 redis_conn = None
 rq_queue = None
 
+# --- Bloco de Conexão Redis com decode_responses=False ---
 if REDIS_URL:
     try:
         print(f"[APP LOG] Tentando conectar ao Redis usando URL: {REDIS_URL}")
@@ -41,30 +42,37 @@ if REDIS_URL:
         redis_host = parsed_url.hostname
         redis_port = parsed_url.port or 6379
         redis_password = parsed_url.password
-        use_ssl = parsed_url.scheme == 'rediss' or 'upstash.io' in redis_host
-        if not redis_host or not redis_password: raise ValueError("Hostname ou Senha não encontrados na REDIS_URL")
+        use_ssl = parsed_url.scheme == 'rediss' or (redis_host and 'upstash.io' in redis_host) # Verifica host existe
+        if not redis_host or not redis_password: raise ValueError("Hostname/Senha não encontrados na REDIS_URL")
         print(f"[APP LOG] Conectando com: host={redis_host}, port={redis_port}, ssl={use_ssl}")
-        redis_conn = Redis(host=redis_host, port=redis_port, password=redis_password, ssl=use_ssl, ssl_cert_reqs=None, decode_responses=True)
+
+        redis_conn = Redis(
+            host=redis_host,
+            port=redis_port,
+            password=redis_password,
+            ssl=use_ssl,
+            ssl_cert_reqs=None,
+            decode_responses=False # <<-- MUDANÇA PRINCIPAL AQUI
+        )
         redis_conn.ping()
         print(f"[APP LOG] Conexão Redis estabelecida e ping bem-sucedido!")
     except ValueError as ve: print(f"[APP ERROR] Erro ao parsear REDIS_URL: {ve}")
     except Exception as redis_err: import traceback; print(f"[APP ERROR] Falha detalhada ao conectar/pingar Redis:\n{traceback.format_exc()}"); redis_conn = None
 else: print("[APP ERROR] Variável de ambiente REDIS_URL não definida.")
 
-# Fila RQ (Inalterado)
+# Fila RQ
 if redis_conn:
     try:
         rq_queue = Queue("default", connection=redis_conn)
         print("[APP LOG] Fila RQ inicializada com sucesso.")
     except Exception as rq_err: print(f"[APP ERROR] Falha ao inicializar fila RQ: {rq_err}"); rq_queue = None
-else: print("[APP WARNING] RQ não pode ser inicializado devido à falha na conexão Redis.")
+else: print("[APP WARNING] RQ não pode ser inicializado.")
 
-# Diretório temporário (Inalterado)
+# Diretório temporário
 APP_TEMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'arquivos_temporarios_app')
 os.makedirs(APP_TEMP_DIR, exist_ok=True)
 
-# --- Funções Auxiliares (Inalteradas) ---
-# (get_client_ip, get_drive_service, limpar_arquivos_temporarios)
+# --- Funções Auxiliares ---
 def get_client_ip():
     if request.headers.getlist("X-Forwarded-For"): client_ip = request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
     elif request.headers.get("X-Real-IP"): client_ip = request.headers.get("X-Real-IP").strip()
@@ -76,7 +84,6 @@ def get_drive_service():
     try:
         from tasks import get_drive_service_from_credentials; return get_drive_service_from_credentials(GOOGLE_CREDENTIALS_BASE64)
     except ImportError: print("[APP ERROR] Não foi possível importar get_drive_service_from_credentials"); return None
-    # (Removido fallback interno para manter DRY)
 
 def limpar_arquivos_temporarios(directory, max_idade_horas=6):
     if not os.path.exists(directory): return
@@ -93,7 +100,6 @@ def limpar_arquivos_temporarios(directory, max_idade_horas=6):
     except Exception as e: print(f"[CLEANUP ERROR] Erro limpar {directory}: {str(e)}")
 
 # --- Rotas Flask ---
-
 @app.route('/')
 def home():
     limpar_arquivos_temporarios(APP_TEMP_DIR)
@@ -101,12 +107,11 @@ def home():
 
 @app.route('/status')
 def user_status():
-    # Temporariamente desativado
-    return ''
+    return '' # Desativado
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    # --- Rota /upload Inalterada (Versão sem limite de taxa) ---
+    # (Rota /upload inalterada - versão sem limite de taxa)
     filename = None; temp_file_path = None
     if not FREEPIK_API_KEY: return "<div class='alert alert-danger'>❌ Chave API Freepik não configurada.</div>", 400
     if not GOOGLE_CREDENTIALS_BASE64: return "<div class='alert alert-danger'>❌ Credenciais Google Drive não configuradas.</div>", 500
@@ -175,8 +180,8 @@ def upload():
 
 @app.route('/download-designi', methods=['POST'])
 def download_designi():
-    # --- Rota /download-designi Inalterada (Versão sem limite de taxa) ---
-    client_ip = get_client_ip() # Pegar IP para log
+    # (Rota /download-designi inalterada - versão sem limite de taxa)
+    client_ip = get_client_ip()
     if not rq_queue: print("[APP ERROR]/download-designi: RQ não disponível."); return jsonify({'success': False, 'error': 'Serviço background indisponível.'}), 503
     if not EMAIL or not SENHA: return jsonify({'success': False, 'error': 'Credenciais Designi não configuradas.'}), 500
     if not GOOGLE_CREDENTIALS_BASE64: return jsonify({'success': False, 'error': 'Credenciais Google Drive não configuradas.'}), 500
@@ -188,73 +193,82 @@ def download_designi():
             job = rq_queue.enqueue(
                 'tasks.perform_designi_download_task',
                 args=(url, client_ip, FOLDER_ID, EMAIL, SENHA, CAPTCHA_API_KEY, GOOGLE_CREDENTIALS_BASE64, URL_LOGIN),
-                job_timeout=1800, result_ttl=3600, failure_ttl=86400 # Manter TTLs
+                job_timeout=1800, result_ttl=3600, failure_ttl=86400
             )
             print(f"[APP LOG] Tarefa Designi enfileirada: {job.id}")
-            # Retornar a mensagem inicial revisada e o job_id
-            return jsonify({
-                'success': True,
-                'message': 'Processo de download iniciado. Aguarde um momento...', # NOVA MENSAGEM INICIAL
-                'job_id': job.id
-            }), 202
+            return jsonify({'success': True, 'message': 'Processo de download iniciado. Aguarde um momento...', 'job_id': job.id }), 202 # Mensagem inicial
         except Exception as enqueue_err:
             print(f"[APP ERROR] Falha ao enfileirar RQ: {enqueue_err}")
             if not rq_queue: return jsonify({'success': False, 'error': 'Falha: Serviço background não conectado.'}), 503
             else: return jsonify({'success': False, 'error': 'Falha ao iniciar processo background.'}), 500
     except Exception as e: print(f"[APP ERROR] Erro inesperado /download-designi: {e}"); import traceback; traceback.print_exc(); return jsonify({'success': False, 'error': f'Erro inesperado: {e}'}), 500
 
-
-# --- NOVA ROTA: /check_job/<job_id> ---
+# --- Rota /check_job ATUALIZADA para lidar com bytes ---
 @app.route('/check_job/<job_id>', methods=['GET'])
 def check_job_status(job_id):
-    """Verifica o status e o resultado de uma tarefa RQ."""
     if not redis_conn:
         print(f"[APP ERROR] /check_job/{job_id}: Redis não conectado.")
         return jsonify({'status': 'error', 'error': 'Serviço de verificação indisponível'}), 503
-
     try:
+        # Fetch DEVE funcionar com decode_responses=False na conexão
         job = Job.fetch(job_id, connection=redis_conn)
-        status = job.get_status()
-        result = None
+        # Usar refresh=False aqui pode ser mais seguro se a conexão for instável,
+        # mas refresh=True garante dados mais atualizados. Vamos manter True por enquanto.
+        status = job.get_status(refresh=True)
+        result_data = None
         error_info = None
 
+        print(f"[APP DEBUG] /check_job/{job_id}: Status bruto = {status}")
+
         if status == 'finished':
-            result = job.result # O resultado da função da tarefa (o dicionário de sucesso/falha)
-            if not isinstance(result, dict): # Segurança extra
-                 print(f"[APP WARNING] /check_job/{job_id}: Resultado não é um dicionário: {type(result)}")
-                 result = {'success': False, 'error': 'Resultado inesperado da tarefa.'} # Define um erro padrão
-        elif status == 'failed':
-            # Tenta pegar o dicionário de erro que a tarefa retorna no bloco except
-            result_on_fail = job.result
-            if isinstance(result_on_fail, dict) and 'error' in result_on_fail:
-                 error_info = result_on_fail['error']
+            # job.result já deve ser o objeto Python desserializado pelo RQ (pickle)
+            raw_result = job.result
+            print(f"[APP DEBUG] /check_job/{job_id}: Resultado bruto (finished) = {raw_result} (Tipo: {type(raw_result)})")
+            if isinstance(raw_result, dict):
+                result_data = raw_result # Usar diretamente se já for dict
+            elif raw_result is None:
+                 result_data = {'success': False, 'error': 'Tarefa finalizada sem resultado.'}
             else:
-                 # Se não retornou dicionário, pega a exceção crua (pode ser longa)
-                 error_info = job.exc_info.strip().split('\n')[-1] if job.exc_info else "Falha desconhecida na tarefa."
+                # Se não for dict (improvável com RQ padrão), tenta tratar como erro
+                print(f"[APP WARNING] /check_job/{job_id}: Resultado final não é dict. Conteúdo: {raw_result}")
+                result_data = {'success': False, 'error': 'Resultado inesperado da tarefa.'}
+
+        elif status == 'failed':
+            # job.exc_info geralmente é string, mas vamos garantir a decodificação segura
+            raw_exc_info = job.exc_info
+            print(f"[APP DEBUG] /check_job/{job_id}: Info de exceção bruta (failed) = {raw_exc_info} (Tipo: {type(raw_exc_info)})")
+            if isinstance(raw_exc_info, bytes):
+                try:
+                    full_traceback = raw_exc_info.decode('utf-8', errors='replace')
+                    error_info = full_traceback.strip().split('\n')[-1] # Última linha
+                except Exception as dec_err:
+                    print(f"[APP WARNING] /check_job/{job_id}: Falha decodificar exc_info bytes: {dec_err}")
+                    error_info = "Falha na tarefa (erro decodificação traceback)."
+            elif isinstance(raw_exc_info, str):
+                 full_traceback = raw_exc_info
+                 error_info = full_traceback.strip().split('\n')[-1] # Última linha
+            else:
+                 error_info = "Falha desconhecida na tarefa (sem traceback detalhado)."
+
             print(f"[APP INFO] /check_job/{job_id}: Tarefa falhou: {error_info}")
+            result_data = {'success': False, 'error': error_info} # Define resultado como falha
 
+        # Monta a resposta final
         response_data = {'status': status}
-        if result:
-            response_data['result'] = result # Envia o dicionário completo retornado pela tarefa
-        if error_info:
-            # Se falhou, garante que enviamos um campo 'error'
-            response_data['error'] = error_info
-            if 'result' in response_data and 'error' not in response_data['result']:
-                 # Adiciona erro ao resultado se ele não estiver lá
-                 response_data['result'] = {'success': False, 'error': error_info}
-
+        if result_data:
+            response_data['result'] = result_data # Inclui o dicionário de resultado (sucesso ou falha)
 
         return jsonify(response_data)
 
     except NoSuchJobError:
-        print(f"[APP INFO] /check_job/{job_id}: Job não encontrado (pode ter expirado ou ID inválido).")
+        print(f"[APP INFO] /check_job/{job_id}: Job não encontrado.")
         return jsonify({'status': 'not_found', 'error': 'Tarefa não encontrada ou expirada.'}), 404
     except Exception as e:
         print(f"[APP ERROR] Erro ao verificar job {job_id}: {e}")
         import traceback; traceback.print_exc()
-        return jsonify({'status': 'error', 'error': 'Erro interno ao verificar status da tarefa.'}), 500
+        return jsonify({'status': 'error', 'error': 'Erro interno ao verificar status.'}), 500
 
-# Execução Principal (Inalterado)
+# Execução Principal
 if __name__ == '__main__':
     print("[APP STARTUP] Limpando diretório temporário do app web...")
     limpar_arquivos_temporarios(APP_TEMP_DIR)
