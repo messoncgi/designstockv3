@@ -3,6 +3,7 @@ import time
 import json
 import base64
 import requests
+# Removido import re pois não usaremos regex no seletor
 from playwright.sync_api import sync_playwright
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -10,8 +11,8 @@ from googleapiclient.http import MediaFileUpload
 import mimetypes
 
 # --- Funções Auxiliares (Inalteradas) ---
-# (get_drive_service_from_credentials e solve_captcha continuam iguais)
 def get_drive_service_from_credentials(credentials_base64_str):
+    # (código igual)
     SCOPES = ['https://www.googleapis.com/auth/drive']
     try:
         if not credentials_base64_str: print("[TASK ERROR] Variável GOOGLE_CREDENTIALS_BASE64 não configurada."); return None
@@ -27,6 +28,7 @@ def get_drive_service_from_credentials(credentials_base64_str):
     except Exception as e: print(f"[TASK ERROR] Erro ao criar serviço Google Drive: {e}"); return None
 
 def solve_captcha(page, captcha_api_key, url_login):
+    # (código igual)
     captcha_element = page.locator("iframe[src*='recaptcha']")
     if captcha_element.count() > 0 and captcha_api_key:
         print("[TASK LOG] CAPTCHA detectado! Tentando resolver...")
@@ -57,7 +59,7 @@ def solve_captcha(page, captcha_api_key, url_login):
         return True
     return False
 
-# --- A Tarefa Principal do RQ (COM CAMINHO v1161 CORRETO!) ---
+# --- A Tarefa Principal do RQ ---
 
 def perform_designi_download_task(
     designi_url,
@@ -78,46 +80,33 @@ def perform_designi_download_task(
     os.makedirs(temp_dir, exist_ok=True)
     print(f"[TASK LOG] Usando diretório temp: {temp_dir}")
 
-    # --- CORREÇÃO APLICADA: Usar caminho v1161 ---
-    chrome_executable_path = "/ms-playwright/chromium-1161/chrome-linux/chrome" # Caminho Principal com v1161
-    headless_shell_path = "/ms-playwright/chromium_headless_shell-1161/chrome-linux/headless_shell" # Caminho Fallback com v1161
-
-    launch_options = {
-        'headless': True,
-        'args': ['--no-sandbox', '--disable-setuid-sandbox']
-    }
-
-    # Verifica se o caminho principal existe
+    # Usar caminho v1161 (mantido)
+    chrome_executable_path = "/ms-playwright/chromium-1161/chrome-linux/chrome"
+    headless_shell_path = "/ms-playwright/chromium_headless_shell-1161/chrome-linux/headless_shell"
+    launch_options = {'headless': True, 'args': ['--no-sandbox', '--disable-setuid-sandbox']}
     if os.path.exists(chrome_executable_path):
-        print(f"[TASK INFO] Usando caminho explícito para o executável: {chrome_executable_path}")
+        print(f"[TASK INFO] Usando caminho explícito: {chrome_executable_path}")
         launch_options['executable_path'] = chrome_executable_path
-    # Se não existir, TENTA o executável headless_shell como fallback
     elif os.path.exists(headless_shell_path):
-        print(f"[TASK WARNING] Executável principal NÃO encontrado em {chrome_executable_path}. Usando fallback: {headless_shell_path}")
+        print(f"[TASK WARNING] Usando fallback: {headless_shell_path}")
         launch_options['executable_path'] = headless_shell_path
     else:
-        # Se ambos falharem, retorna erro
-        print(f"[TASK ERROR] CRÍTICO: Nenhum executável do navegador encontrado em caminhos esperados ({chrome_executable_path} ou {headless_shell_path}). Verifique o Dockerfile e a instalação.")
-        return {
-            'success': False,
-            'error': f"Executável do navegador não encontrado.",
-            'duration_seconds': time.time() - start_time
-        }
-        # Fim da verificação do caminho do browser
+        print(f"[TASK ERROR] CRÍTICO: Executável navegador NÃO encontrado.")
+        return {'success': False, 'error': f"Executável navegador não encontrado.", 'duration_seconds': time.time() - start_time }
 
-    # O restante da função permanece igual...
     try:
         with sync_playwright() as p:
             try:
                 print("[TASK LOG] Iniciando Chromium headless...")
-                browser = p.chromium.launch(**launch_options) # Passa as opções com o caminho correto
+                browser = p.chromium.launch(**launch_options)
                 context = browser.new_context(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
                 page = context.new_page()
-                page.set_default_timeout(90000)
+                page.set_default_timeout(90000) # Timeout geral alto
 
-                # --- Lógica de Login, Navegação, Download, Upload (Inalterada) ---
+                # --- Lógica de Login e Navegação (Inalterada) ---
                 print(f"[TASK LOG] Acessando página de login: {url_login}")
                 page.goto(url_login, wait_until='networkidle')
+                # ... (código de login inalterado) ...
                 if not email or not senha: raise ValueError('Credenciais Designi não fornecidas.')
                 print("[TASK LOG] Preenchendo credenciais...")
                 page.fill("input[name=email]", email, timeout=30000)
@@ -137,24 +126,48 @@ def perform_designi_download_task(
                     else: print(f"[TASK WARNING] Espera pós-login falhou, mas URL mudou: {page.url}")
                 print(f"[TASK LOG] Login OK! URL: {page.url}")
                 print(f"[TASK LOG] Navegando para URL do arquivo: {designi_url}")
-                page.goto(designi_url, wait_until='networkidle')
+                page.goto(designi_url, wait_until='networkidle') # Espera carregar bem
                 print(f"[TASK LOG] Página arquivo carregada. URL: {page.url}")
-                print("[TASK LOG] Aguardando botão download...")
-                download_button_selector = "#downButton, a:has-text('Download'), button:has-text('Download')"
-                download_button = page.locator(download_button_selector).first
+
+                # --- CORREÇÃO: Voltar a usar o seletor #downButton ---
+                print("[TASK LOG] Aguardando botão download (usando #downButton)...")
+                download_button_selector = "#downButton" # <<-- SELETOR SIMPLIFICADO
+
+                download_button = page.locator(download_button_selector) # Não precisa de .first com ID
                 try:
-                    download_button.wait_for(state="visible", timeout=60000)
-                    print("[TASK LOG] Botão download visível.")
+                    # Aumentar um pouco o timeout para garantir que o botão renderize
+                    print(f"[TASK DEBUG] Esperando por {download_button_selector} ficar visível...")
+                    download_button.wait_for(state="visible", timeout=90000) # Aumentado para 90s
+                    print("[TASK LOG] Botão #downButton visível encontrado!")
                 except Exception as btn_err:
+                    print(f"[TASK ERROR] Timeout ou erro ao esperar por #downButton: {btn_err}")
                     page.screenshot(path=os.path.join(temp_dir, 'download_button_fail.png'))
-                    raise Exception(f"Botão download ({download_button_selector}) não encontrado: {btn_err}")
+                    # Fornecer um erro mais específico
+                    raise Exception(f"Botão de download com id='downButton' não encontrado ou visível após 90s.")
+
+                # --- Lógica de Clique, Popup e Download (Inalterada) ---
                 print("[TASK LOG] Configurando espera download...")
                 with page.expect_download(timeout=120000) as download_info:
-                    print("[TASK LOG] Clicando botão download...")
-                    download_button.click()
-                    print("[TASK LOG] Clique realizado, aguardando início download...")
+                    print("[TASK LOG] Clicando botão #downButton...")
+                    download_button.click() # Clica no botão encontrado
+                    print("[TASK LOG] Clique realizado, aguardando popup/download...")
+                    # ... (lógica do popup inalterada) ...
+                    time.sleep(3)
+                    thank_you_popup = page.locator("div.modal-content:has-text('Obrigado por baixar meu arquivo!')")
+                    if thank_you_popup.count() > 0:
+                        print("[TASK LOG] Popup agradecimento detectado")
+                        close_button = page.locator("button[aria-label='Close'], .modal-content button, .modal-footer button").first
+                        if close_button.is_visible():
+                             print("[TASK LOG] Fechando popup...")
+                             close_button.click()
+                             print("[TASK LOG] Popup fechado.")
+                        else: print("[TASK LOG] Botão fechar popup não visível.")
+                    else: print("[TASK LOG] Nenhum popup agradecimento detectado.")
+                    print("[TASK LOG] Aguardando download começar...")
+
                 download = download_info.value
                 if not download: raise Exception("Evento download não ocorreu.")
+                # ... (lógica de salvar arquivo inalterada) ...
                 suggested_filename = download.suggested_filename or f"designi_download_{int(time.time())}.file"
                 temp_file_path = os.path.join(temp_dir, suggested_filename)
                 print(f"[TASK LOG] Download iniciado: {suggested_filename}. Salvando em: {temp_file_path}")
@@ -165,10 +178,12 @@ def perform_designi_download_task(
                 file_size = os.path.getsize(temp_file_path)
                 print(f"[TASK LOG] Arquivo salvo. Tamanho: {file_size} bytes")
 
+
+            # ... (blocos except e finally inalterados) ...
             except Exception as pw_error:
                 print(f"[TASK ERROR] Erro durante automação Playwright: {pw_error}")
                 if 'page' in locals() and page and not page.is_closed():
-                    try: page.screenshot(path=os.path.join(temp_dir, 'playwright_error_screenshot.png'))
+                    try: page.screenshot(path=os.path.join(temp_dir, f'playwright_error_{int(time.time())}.png'))
                     except Exception as ss_err: print(f"[TASK WARNING] Não foi possível tirar screenshot erro: {ss_err}")
                 raise
 
@@ -177,27 +192,29 @@ def perform_designi_download_task(
 
         # --- Upload Google Drive (Inalterado) ---
         if temp_file_path and os.path.exists(temp_file_path):
-            print("[TASK LOG] Iniciando upload Google Drive...")
-            drive_service = get_drive_service_from_credentials(drive_credentials_base64)
-            if not drive_service: raise Exception("Não foi possível obter serviço Google Drive.")
-            filename = os.path.basename(temp_file_path)
-            file_metadata = {'name': filename}
-            if folder_id: file_metadata['parents'] = [folder_id]
-            mimetype, _ = mimetypes.guess_type(temp_file_path)
-            mimetype = mimetype or 'application/octet-stream'
-            media = MediaFileUpload(temp_file_path, mimetype=mimetype, resumable=True)
-            print(f"[TASK LOG] Enviando '{filename}' ({mimetype}) para Google Drive...")
-            file = drive_service.files().create(body=file_metadata, media_body=media, fields='id, webViewLink').execute()
-            print(f"[TASK LOG] Upload Drive concluído. ID: {file.get('id')}")
-            print("[TASK LOG] Definindo permissão pública...")
-            drive_service.permissions().create(fileId=file.get('id'), body={'role': 'reader', 'type': 'anyone'}).execute()
-            print("[TASK LOG] Permissão pública definida.")
-            end_time = time.time(); duration = end_time - start_time
-            print(f"[TASK SUCCESS] Tarefa concluída com sucesso em {duration:.2f} segundos.")
-            return {'success': True, 'file_id': file.get('id'), 'download_link': file.get('webViewLink'), 'filename': filename, 'duration_seconds': duration}
+            # ... (código upload inalterado) ...
+             print("[TASK LOG] Iniciando upload Google Drive...")
+             drive_service = get_drive_service_from_credentials(drive_credentials_base64)
+             if not drive_service: raise Exception("Não foi possível obter serviço Google Drive.")
+             filename = os.path.basename(temp_file_path)
+             file_metadata = {'name': filename}
+             if folder_id: file_metadata['parents'] = [folder_id]
+             mimetype, _ = mimetypes.guess_type(temp_file_path)
+             mimetype = mimetype or 'application/octet-stream'
+             media = MediaFileUpload(temp_file_path, mimetype=mimetype, resumable=True)
+             print(f"[TASK LOG] Enviando '{filename}' ({mimetype}) para Google Drive...")
+             file = drive_service.files().create(body=file_metadata, media_body=media, fields='id, webViewLink').execute()
+             print(f"[TASK LOG] Upload Drive concluído. ID: {file.get('id')}")
+             print("[TASK LOG] Definindo permissão pública...")
+             drive_service.permissions().create(fileId=file.get('id'), body={'role': 'reader', 'type': 'anyone'}).execute()
+             print("[TASK LOG] Permissão pública definida.")
+             end_time = time.time(); duration = end_time - start_time
+             print(f"[TASK SUCCESS] Tarefa concluída com sucesso em {duration:.2f} segundos.")
+             return {'success': True, 'file_id': file.get('id'), 'download_link': file.get('webViewLink'), 'filename': filename, 'duration_seconds': duration}
         else:
              raise Exception("Arquivo temp não encontrado ou inválido pós-download.")
 
+    # ... (blocos except e finally inalterados) ...
     except Exception as e:
         end_time = time.time(); duration = end_time - start_time
         error_message = f"Erro na tarefa download: {str(e)}"
