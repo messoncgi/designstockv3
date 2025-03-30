@@ -300,19 +300,12 @@ def save_designi_cookies(cookies_data, client_ip=None):
         return False
     
     try:
-        # Se client_ip não for fornecido, tenta obter do request (contexto web)
-        if client_ip is None:
-            try:
-                client_ip = get_client_ip()
-            except Exception as ip_err:
-                print(f"[APP WARNING] Não foi possível obter IP do request: {ip_err}")
-                client_ip = 'worker_context'
-        
-        cookie_key = f"designi_cookies:{client_ip}"
+        # Usar uma chave global para todos os usuários
+        cookie_key = "designi_global_session"
         
         # Salvar cookies no Redis com expiração de 7 dias
         session_redis.set(cookie_key, json.dumps(cookies_data), ex=604800)  # 7 dias em segundos
-        print(f"[APP LOG] Cookies do Designi salvos para IP {client_ip}")
+        print("[APP LOG] Cookies do Designi salvos globalmente")
         return True
     except Exception as e:
         print(f"[APP ERROR] Erro ao salvar cookies do Designi: {e}")
@@ -325,24 +318,17 @@ def get_designi_cookies(client_ip=None):
         return None
     
     try:
-        # Se client_ip não for fornecido, tenta obter do request (contexto web)
-        if client_ip is None:
-            try:
-                client_ip = get_client_ip()
-            except Exception as ip_err:
-                print(f"[APP WARNING] Não foi possível obter IP do request: {ip_err}")
-                return None
-        
-        cookie_key = f"designi_cookies:{client_ip}"
+        # Usar a mesma chave global para todos os usuários
+        cookie_key = "designi_global_session"
         
         # Recuperar cookies do Redis
         cookies_json = session_redis.get(cookie_key)
         if not cookies_json:
-            print(f"[APP LOG] Nenhum cookie encontrado para IP {client_ip}")
+            print("[APP LOG] Nenhum cookie global encontrado")
             return None
         
         cookies_data = json.loads(cookies_json)
-        print(f"[APP LOG] Cookies do Designi recuperados para IP {client_ip}")
+        print("[APP LOG] Cookies do Designi recuperados da sessão global")
         return cookies_data
     except Exception as e:
         print(f"[APP ERROR] Erro ao recuperar cookies do Designi: {e}")
@@ -383,8 +369,8 @@ def download_designi():
         if not url or not url.startswith('http'): return jsonify({'success': False, 'error': 'URL Designi inválida.'}), 400
         print(f"[APP LOG] /download-designi: Recebido request para {url} de {client_ip}")
         
-        # Verificar se temos cookies salvos para este IP
-        cookies = get_designi_cookies(client_ip)
+        # Verificar se temos cookies salvos globalmente
+        cookies = get_designi_cookies()
         
         try:
             job = rq_queue.enqueue(
