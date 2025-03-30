@@ -195,7 +195,10 @@
             const link = linkInput.value;
             const normalState = form.querySelector('.normal-state');
             const loadingState = form.querySelector('.loading');
-
+            const submitButton = form.querySelector('button[type="submit"]');
+            
+            // Desabilita o botão durante o processamento
+            submitButton.disabled = true;
             normalState.style.display = 'none';
             loadingState.style.display = 'inline-block';
 
@@ -212,15 +215,16 @@
                     linkInput.value = '';
                     pollJobStatus(data.job_id);
                 } else {
-                    // Mostra erro E ATUALIZA status (pode ter sido erro 429 - limite)
-                     addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro ao iniciar: ${data.error || `Erro ${response.status}.`}</div>`);
+                    addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro ao iniciar: ${data.error || `Erro ${response.status}.`}</div>`);
                 }
-                 await fetchAndUpdateStatus(); // <<< REINTRODUZIDO: Atualiza status após tentativa
+                await fetchAndUpdateStatus();
             } catch (error) {
                 console.error('Erro fetch /download-designi:', error);
                 addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro comunicação: ${error.message}</div>`);
-                 await fetchAndUpdateStatus(); // <<< REINTRODUZIDO: Atualiza status mesmo em erro de fetch
+                await fetchAndUpdateStatus();
             } finally {
+                // Reabilita o botão após o processamento
+                submitButton.disabled = false;
                 normalState.style.display = 'inline';
                 loadingState.style.display = 'none';
             }
@@ -233,7 +237,10 @@
             const normalState = form.querySelector('.normal-state');
             const loadingState = form.querySelector('.loading');
             const linkInput = document.getElementById('freepik_link');
-
+            const submitButton = form.querySelector('button[type="submit"]');
+            
+            // Desabilita o botão durante o processamento
+            submitButton.disabled = true;
             normalState.style.display = 'none';
             loadingState.style.display = 'inline-block';
 
@@ -241,18 +248,19 @@
                 const response = await fetch('/upload', { method: 'POST', body: new FormData(form) });
                 const dataHtml = await response.text();
                 if (!response.ok) {
-                    // Mostra erro E ATUALIZA status (pode ter sido 429)
-                     addHistoryItem(dataHtml || `<div class="alert alert-danger mb-0">❌ Erro ${response.status}.</div>`);
+                    addHistoryItem(dataHtml || `<div class="alert alert-danger mb-0">❌ Erro ${response.status}.</div>`);
                 } else {
                     addHistoryItem(dataHtml);
                     linkInput.value = '';
                 }
-                 await fetchAndUpdateStatus(); // <<< REINTRODUZIDO: Atualiza status após tentativa
+                await fetchAndUpdateStatus();
             } catch (error) {
                 console.error('Erro fetch /upload:', error);
                 addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro comunicação: ${error.message}</div>`);
-                 await fetchAndUpdateStatus(); // <<< REINTRODUZIDO: Atualiza status mesmo em erro de fetch
+                await fetchAndUpdateStatus();
             } finally {
+                // Reabilita o botão após o processamento
+                submitButton.disabled = false;
                 normalState.style.display = 'inline';
                 loadingState.style.display = 'none';
             }
