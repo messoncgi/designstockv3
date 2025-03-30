@@ -4,9 +4,9 @@ import re
 import base64
 import time
 import mimetypes
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict # Re-adicionado para fallback
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import requests
 from redis import Redis
 from rq import Queue
@@ -14,6 +14,7 @@ from rq.job import Job
 from rq.exceptions import NoSuchJobError
 from dotenv import load_dotenv
 from urllib.parse import urlparse
+from flask_session import Session
 
 load_dotenv()
 
@@ -30,10 +31,18 @@ GOOGLE_CREDENTIALS_BASE64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-should-be-changed')
 
+# Configuração da sessão Flask
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sessão válida por 7 dias
+app.config['SESSION_USE_SIGNER'] = True  # Assinar cookies de sessão
+app.config['SESSION_KEY_PREFIX'] = 'designi_session:'  # Prefixo para chaves no Redis
+
 # Conexão Redis (com decode_responses=False)
 REDIS_URL = os.environ.get('REDIS_URL')
 redis_conn = None
 rq_queue = None
+session_redis = None
 
 if REDIS_URL:
     try:
@@ -44,11 +53,23 @@ if REDIS_URL:
         use_ssl = parsed_url.scheme == 'rediss' or (redis_host and 'upstash.io' in redis_host)
         if not redis_host or not redis_password: raise ValueError("Hostname/Senha não encontrados na REDIS_URL")
         print(f"[APP LOG] Conectando com: host={redis_host}, port={redis_port}, ssl={use_ssl}")
-        redis_conn = Redis(host=redis_host, port=redis_port, password=redis_password, ssl=use_ssl, ssl_cert_reqs=None, decode_responses=False) # decode_responses=False
+        
+        # Conexão para RQ e outras operações (decode_responses=False)
+        redis_conn = Redis(host=redis_host, port=redis_port, password=redis_password, ssl=use_ssl, ssl_cert_reqs=None, decode_responses=False)
+        
+        # Conexão para sessões Flask (decode_responses=True)
+        session_redis = Redis(host=redis_host, port=redis_port, password=redis_password, ssl=use_ssl, ssl_cert_reqs=None, decode_responses=True)
+        
         redis_conn.ping()
         print(f"[APP LOG] Conexão Redis estabelecida e ping bem-sucedido!")
+        
+        # Configurar Flask-Session para usar a conexão Redis
+        app.config['SESSION_REDIS'] = session_redis
+        Session(app)
+        print("[APP LOG] Flask-Session configurado com Redis.")
+        
     except ValueError as ve: print(f"[APP ERROR] Erro ao parsear REDIS_URL: {ve}")
-    except Exception as redis_err: import traceback; print(f"[APP ERROR] Falha detalhada ao conectar/pingar Redis:\n{traceback.format_exc()}"); redis_conn = None
+    except Exception as redis_err: import traceback; print(f"[APP ERROR] Falha detalhada ao conectar/pingar Redis:\n{traceback.format_exc()}"); redis_conn = None; session_redis = None
 else: print("[APP ERROR] Variável de ambiente REDIS_URL não definida.")
 
 # Fila RQ
@@ -272,6 +293,47 @@ def upload():
             except Exception as e_clean: print(f"[APP WARNING] Erro ao remover temp {temp_file_path}: {e_clean}")
 
 
+# Função para salvar cookies de sessão do Designi no Redis
+def save_designi_cookies(cookies_data):
+    if not session_redis:
+        print("[APP WARNING] Não foi possível salvar cookies: Redis para sessões não disponível.")
+        return False
+    
+    try:
+        client_ip = get_client_ip()
+        cookie_key = f"designi_cookies:{client_ip}"
+        
+        # Salvar cookies no Redis com expiração de 7 dias
+        session_redis.set(cookie_key, json.dumps(cookies_data), ex=604800)  # 7 dias em segundos
+        print(f"[APP LOG] Cookies do Designi salvos para IP {client_ip}")
+        return True
+    except Exception as e:
+        print(f"[APP ERROR] Erro ao salvar cookies do Designi: {e}")
+        return False
+
+# Função para recuperar cookies de sessão do Designi do Redis
+def get_designi_cookies():
+    if not session_redis:
+        print("[APP WARNING] Não foi possível recuperar cookies: Redis para sessões não disponível.")
+        return None
+    
+    try:
+        client_ip = get_client_ip()
+        cookie_key = f"designi_cookies:{client_ip}"
+        
+        # Recuperar cookies do Redis
+        cookies_json = session_redis.get(cookie_key)
+        if not cookies_json:
+            print(f"[APP LOG] Nenhum cookie encontrado para IP {client_ip}")
+            return None
+        
+        cookies_data = json.loads(cookies_json)
+        print(f"[APP LOG] Cookies do Designi recuperados para IP {client_ip}")
+        return cookies_data
+    except Exception as e:
+        print(f"[APP ERROR] Erro ao recuperar cookies do Designi: {e}")
+        return None
+
 @app.route('/download-designi', methods=['POST'])
 def download_designi():
     limite_diario = 2
@@ -306,10 +368,14 @@ def download_designi():
         data = request.json; url = data.get('url')
         if not url or not url.startswith('http'): return jsonify({'success': False, 'error': 'URL Designi inválida.'}), 400
         print(f"[APP LOG] /download-designi: Recebido request para {url} de {client_ip}")
+        
+        # Verificar se temos cookies salvos para este IP
+        cookies = get_designi_cookies()
+        
         try:
             job = rq_queue.enqueue(
                 'tasks.perform_designi_download_task',
-                args=(url, client_ip, FOLDER_ID, EMAIL, SENHA, CAPTCHA_API_KEY, GOOGLE_CREDENTIALS_BASE64, URL_LOGIN),
+                args=(url, client_ip, FOLDER_ID, EMAIL, SENHA, CAPTCHA_API_KEY, GOOGLE_CREDENTIALS_BASE64, URL_LOGIN, cookies),
                 job_timeout=1800, result_ttl=3600, failure_ttl=86400
             )
             print(f"[APP LOG] Tarefa Designi enfileirada: {job.id}")

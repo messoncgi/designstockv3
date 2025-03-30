@@ -69,7 +69,8 @@ def perform_designi_download_task(
     senha,
     captcha_api_key,
     drive_credentials_base64,
-    url_login='https://designi.com.br/login'
+    url_login='https://designi.com.br/login',
+    saved_cookies=None
     ):
     print(f"[TASK LOG] Iniciando tarefa para URL: {designi_url} (IP: {client_ip})")
     temp_file_path = None
@@ -103,30 +104,70 @@ def perform_designi_download_task(
                 page = context.new_page()
                 page.set_default_timeout(90000) # Timeout geral alto
 
-                # --- Lógica de Login e Navegação (Inalterada) ---
-                print(f"[TASK LOG] Acessando página de login: {url_login}")
-                page.goto(url_login, wait_until='networkidle')
-                # ... (código de login inalterado) ...
-                if not email or not senha: raise ValueError('Credenciais Designi não fornecidas.')
-                print("[TASK LOG] Preenchendo credenciais...")
-                page.fill("input[name=email]", email, timeout=30000)
-                page.fill("input[name=password]", senha, timeout=30000)
-                solve_captcha(page, captcha_api_key, url_login)
-                print("[TASK LOG] Tentando clicar login...")
-                login_button = page.locator('button:has-text("Fazer login"), input[type="submit"]:has-text("Login")').first
-                login_button.wait_for(state="visible", timeout=30000)
-                login_button.click()
-                print("[TASK LOG] Aguardando navegação pós-login...")
-                try:
-                    page.wait_for_url(lambda url: "/login" not in url, timeout=60000)
-                except Exception as nav_err:
-                    if "/login" in page.url:
-                        page.screenshot(path=os.path.join(temp_dir, 'login_fail_screenshot.png'))
-                        raise Exception(f"Falha login (ainda em /login): {nav_err}")
-                    else: print(f"[TASK WARNING] Espera pós-login falhou, mas URL mudou: {page.url}")
-                print(f"[TASK LOG] Login OK! URL: {page.url}")
-                print(f"[TASK LOG] Navegando para URL do arquivo: {designi_url}")
-                page.goto(designi_url, wait_until='networkidle') # Espera carregar bem
+                # --- Lógica de Login e Navegação (Modificada para usar cookies salvos) ---
+                login_necessario = True
+                
+                # Verificar se temos cookies salvos
+                if saved_cookies:
+                    try:
+                        print("[TASK LOG] Tentando usar cookies salvos...")
+                        # Adicionar cookies salvos ao contexto do navegador
+                        for cookie in saved_cookies:
+                            context.add_cookies([cookie])
+                        
+                        # Tentar acessar diretamente a URL do arquivo
+                        print(f"[TASK LOG] Navegando diretamente para URL do arquivo: {designi_url}")
+                        page.goto(designi_url, wait_until='networkidle')
+                        
+                        # Verificar se estamos logados verificando se não fomos redirecionados para login
+                        if "/login" not in page.url:
+                            print("[TASK LOG] Cookies válidos! Login automático bem-sucedido.")
+                            login_necessario = False
+                        else:
+                            print("[TASK LOG] Cookies expirados ou inválidos. Realizando login manual.")
+                    except Exception as cookie_err:
+                        print(f"[TASK WARNING] Erro ao usar cookies salvos: {cookie_err}. Realizando login manual.")
+                else:
+                    print("[TASK LOG] Nenhum cookie salvo encontrado. Realizando login manual.")
+                
+                # Se não conseguimos usar cookies, fazer login normal
+                if login_necessario:
+                    print(f"[TASK LOG] Acessando página de login: {url_login}")
+                    page.goto(url_login, wait_until='networkidle')
+                    if not email or not senha: raise ValueError('Credenciais Designi não fornecidas.')
+                    print("[TASK LOG] Preenchendo credenciais...")
+                    page.fill("input[name=email]", email, timeout=30000)
+                    page.fill("input[name=password]", senha, timeout=30000)
+                    solve_captcha(page, captcha_api_key, url_login)
+                    print("[TASK LOG] Tentando clicar login...")
+                    login_button = page.locator('button:has-text("Fazer login"), input[type="submit"]:has-text("Login")').first
+                    login_button.wait_for(state="visible", timeout=30000)
+                    login_button.click()
+                    print("[TASK LOG] Aguardando navegação pós-login...")
+                    try:
+                        page.wait_for_url(lambda url: "/login" not in url, timeout=60000)
+                    except Exception as nav_err:
+                        if "/login" in page.url:
+                            page.screenshot(path=os.path.join(temp_dir, 'login_fail_screenshot.png'))
+                            raise Exception(f"Falha login (ainda em /login): {nav_err}")
+                        else: print(f"[TASK WARNING] Espera pós-login falhou, mas URL mudou: {page.url}")
+                    print(f"[TASK LOG] Login OK! URL: {page.url}")
+                    
+                    # Salvar cookies após login bem-sucedido
+                    try:
+                        cookies = context.cookies()
+                        # Enviar cookies para o app.py salvar no Redis
+                        # Importamos aqui para evitar dependência circular
+                        from app import save_designi_cookies
+                        save_designi_cookies(cookies)
+                        print("[TASK LOG] Cookies salvos com sucesso após login.")
+                    except Exception as save_err:
+                        print(f"[TASK WARNING] Erro ao salvar cookies: {save_err}")
+                    
+                    # Navegar para a URL do arquivo
+                    print(f"[TASK LOG] Navegando para URL do arquivo: {designi_url}")
+                    page.goto(designi_url, wait_until='networkidle') # Espera carregar bem
+                
                 print(f"[TASK LOG] Página arquivo carregada. URL: {page.url}")
 
                 # --- CORREÇÃO: Voltar a usar o seletor #downButton ---
