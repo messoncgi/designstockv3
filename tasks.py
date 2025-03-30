@@ -159,7 +159,7 @@ def perform_designi_download_task(
                         # Enviar cookies para o app.py salvar no Redis
                         # Importamos aqui para evitar dependência circular
                         from app import save_designi_cookies
-                        save_designi_cookies(cookies)
+                        save_designi_cookies(cookies, client_ip)
                         print("[TASK LOG] Cookies salvos com sucesso após login.")
                     except Exception as save_err:
                         print(f"[TASK WARNING] Erro ao salvar cookies: {save_err}")

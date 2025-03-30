@@ -294,13 +294,20 @@ def upload():
 
 
 # Função para salvar cookies de sessão do Designi no Redis
-def save_designi_cookies(cookies_data):
+def save_designi_cookies(cookies_data, client_ip=None):
     if not session_redis:
         print("[APP WARNING] Não foi possível salvar cookies: Redis para sessões não disponível.")
         return False
     
     try:
-        client_ip = get_client_ip()
+        # Se client_ip não for fornecido, tenta obter do request (contexto web)
+        if client_ip is None:
+            try:
+                client_ip = get_client_ip()
+            except Exception as ip_err:
+                print(f"[APP WARNING] Não foi possível obter IP do request: {ip_err}")
+                client_ip = 'worker_context'
+        
         cookie_key = f"designi_cookies:{client_ip}"
         
         # Salvar cookies no Redis com expiração de 7 dias
@@ -312,13 +319,20 @@ def save_designi_cookies(cookies_data):
         return False
 
 # Função para recuperar cookies de sessão do Designi do Redis
-def get_designi_cookies():
+def get_designi_cookies(client_ip=None):
     if not session_redis:
         print("[APP WARNING] Não foi possível recuperar cookies: Redis para sessões não disponível.")
         return None
     
     try:
-        client_ip = get_client_ip()
+        # Se client_ip não for fornecido, tenta obter do request (contexto web)
+        if client_ip is None:
+            try:
+                client_ip = get_client_ip()
+            except Exception as ip_err:
+                print(f"[APP WARNING] Não foi possível obter IP do request: {ip_err}")
+                return None
+        
         cookie_key = f"designi_cookies:{client_ip}"
         
         # Recuperar cookies do Redis
@@ -370,7 +384,7 @@ def download_designi():
         print(f"[APP LOG] /download-designi: Recebido request para {url} de {client_ip}")
         
         # Verificar se temos cookies salvos para este IP
-        cookies = get_designi_cookies()
+        cookies = get_designi_cookies(client_ip)
         
         try:
             job = rq_queue.enqueue(
