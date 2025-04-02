@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 import mimetypes
 import traceback
-from datetime import datetime # Adicionado para log de erro
+from datetime import datetime
 
 # --- Função Auxiliar para Upload de Debug (Inalterada) ---
 def upload_debug_screenshot_to_drive(drive_service, local_file_path, folder_id, base_filename):
@@ -33,9 +33,8 @@ def upload_debug_screenshot_to_drive(drive_service, local_file_path, folder_id, 
             print(f"[DEBUG UPLOAD] Pasta debug criada: {debug_folder_id}")
         if not debug_folder_id: raise Exception("Não foi possível encontrar ou criar a pasta de debug.")
 
-        # Determina o mimetype
         mimetype, _ = mimetypes.guess_type(local_file_path)
-        mimetype = mimetype or 'application/octet-stream' # Default se não conseguir adivinhar
+        mimetype = mimetype or 'application/octet-stream'
 
         filename_drive = f"{base_filename}_{os.path.basename(local_file_path)}"
         file_metadata = {'name': filename_drive,'parents': [debug_folder_id]}
@@ -46,6 +45,7 @@ def upload_debug_screenshot_to_drive(drive_service, local_file_path, folder_id, 
     except Exception as e:
         print(f"[DEBUG UPLOAD ERROR] Falha ao fazer upload do arquivo de debug {local_file_path}: {e}")
         print(traceback.format_exc())
+
 
 # --- Funções Auxiliares (get_drive_service_from_credentials, solve_captcha - Inalteradas) ---
 def get_drive_service_from_credentials(credentials_base64_str):
@@ -98,20 +98,41 @@ def solve_captcha(page, captcha_api_key, url_login):
         return True
     return False
 
-
-# --- Função de Verificação de Login ---
+# --- Função de Verificação de Login (VERSÃO BASEADA NAS SUGESTÕES) ---
 def check_login_status(page):
-    """Verifica se um elemento indicativo de login (ex: botão Sair) está visível."""
-    # Tenta encontrar um link ou botão com texto "Sair" ou "Logout"
-    # Ajuste os seletores conforme necessário para o site Designi
-    logout_locator = page.locator("a:has-text('Sair'), button:has-text('Sair'), a:has-text('Logout'), button:has-text('Logout')").first
+    """Verifica status do login checando msg de sucesso ou ausência de botão 'Entrar'."""
+    print("[TASK DEBUG] Verificando login:")
+
+    # 1. Procurar pela mensagem de sucesso explícita
+    success_message_locator = page.locator("*:has-text('Login efetuado com sucesso!')")
     try:
-        # Espera curta para ver se o elemento está presente e visível
-        logout_locator.wait_for(state="visible", timeout=10000) # Espera 10 segundos
-        print("[TASK DEBUG] Elemento 'Sair/Logout' encontrado. Login parece OK.")
+        success_message_locator.wait_for(state="visible", timeout=5000) # Timeout curto (5s)
+        print("[TASK DEBUG] Mensagem 'Login efetuado com sucesso!' encontrada. Login OK.")
         return True
     except Exception:
-        print("[TASK DEBUG] Elemento 'Sair/Logout' NÃO encontrado. Login provavelmente falhou.")
+        print("[TASK DEBUG] Mensagem 'Login efetuado com sucesso!' NÃO encontrada.")
+
+    # 2. Se a mensagem não foi encontrada, verificar a AUSÊNCIA do botão/link "Entrar"
+    print("[TASK DEBUG] Verificando ausência do botão/link 'Entrar'...")
+    login_prompt_locator = page.locator("a:has-text('Entrar'), button:has-text('Entrar'), a:has-text('Login'), button:has-text('Login')").first
+    try:
+        # Verifica se o botão Entrar NÃO está visível (ou não existe)
+        # Usamos um timeout curto aqui também. Se ele aparecer rápido, consideramos não logado.
+        login_prompt_locator.wait_for(state="hidden", timeout=5000)
+        print("[TASK DEBUG] Botão/link 'Entrar' NÃO está visível (ou oculto rapidamente). Login provavelmente OK.")
+        return True
+    except Exception:
+        # Se wait_for(state="hidden") der timeout, significa que o botão 'Entrar' ESTÁ visível
+        print("[TASK DEBUG] Botão/link 'Entrar' ESTÁ visível. Login provavelmente FALHOU.")
+        # Tira um screenshot para análise se a verificação falhar neste ponto
+        try:
+             verify_fail_path = os.path.join(temp_dir, f'verify_login_fail_entrar_visible_{int(time.time())}.png')
+             print(f"[TASK DEBUG] Tirando screenshot da falha (botão Entrar visível): {verify_fail_path}")
+             page.screenshot(path=verify_fail_path)
+             # Tentativa de upload silenciosa (sem esperar drive_service aqui, pode falhar)
+             # upload_debug_screenshot_to_drive(drive_service, verify_fail_path, folder_id, "VERIFY_FAIL_ENTRAR_VISIBLE")
+        except Exception as ss_err:
+             print(f"[TASK WARNING] Falha ao tirar screenshot da verificação (Entrar visível): {ss_err}")
         return False
 
 # --- A Tarefa Principal do RQ ---
@@ -127,13 +148,14 @@ def perform_designi_download_task(
     saved_cookies=None
     ):
     print(f"[TASK LOG] Iniciando tarefa para URL: {designi_url} (IP: {client_ip})")
-    # ... (Inicializações: temp_file_path, browser, context, drive_service, start_time, temp_dir - igual) ...
+    # Variáveis Globais da Função
+    global temp_dir # Tornar temp_dir acessível na função de verificação para screenshots
     temp_file_path = None
     browser = None
     context = None
     drive_service = None
     start_time = time.time()
-    temp_dir = '/tmp/designi_downloads'
+    temp_dir = '/tmp/designi_downloads' # Definido globalmente para a função
     os.makedirs(temp_dir, exist_ok=True)
     print(f"[TASK LOG] Usando diretório temp: {temp_dir}")
 
@@ -141,20 +163,21 @@ def perform_designi_download_task(
     try:
         print("[TASK LOG] Tentando obter serviço Google Drive...")
         drive_service = get_drive_service_from_credentials(drive_credentials_base64)
-        if not drive_service: print("[TASK WARNING] Não foi possível obter serviço Google Drive no início. Upload de debug pode falhar.")
+        if not drive_service: print("[TASK WARNING] Não foi possível obter serviço Google Drive no início...")
         else: print("[TASK LOG] Serviço Google Drive obtido com sucesso.")
     except Exception as drive_init_err: print(f"[TASK WARNING] Erro ao obter serviço Google Drive no início: {drive_init_err}")
 
-    # ... (Configuração Playwright launch_options - igual) ...
+    # Configuração Playwright
+    # ... (launch_options, verificação de path, erro crítico - igual) ...
     chrome_executable_path = "/ms-playwright/chromium-1161/chrome-linux/chrome"
     headless_shell_path = "/ms-playwright/chromium_headless_shell-1161/chrome-linux/headless_shell"
     launch_options = {'headless': True, 'args': ['--no-sandbox', '--disable-setuid-sandbox']}
-    # ... (Verificação de path e tratamento de erro crítico - igual, incluindo upload de log) ...
     if os.path.exists(chrome_executable_path): launch_options['executable_path'] = chrome_executable_path
     elif os.path.exists(headless_shell_path): launch_options['executable_path'] = headless_shell_path
     else:
         print(f"[TASK ERROR] CRÍTICO: Executável navegador NÃO encontrado.")
         if drive_service:
+            # ... (lógica para logar erro crítico no drive) ...
             error_log_path = os.path.join(temp_dir, f'critical_browser_error_{int(time.time())}.log')
             with open(error_log_path, 'w') as f: f.write(f"Timestamp: {datetime.now()}\nURL: {designi_url}\nIP: {client_ip}\nError: CRITICAL BROWSER EXECUTABLE NOT FOUND...")
             upload_debug_screenshot_to_drive(drive_service, error_log_path, folder_id, "CRITICAL_ERROR")
@@ -162,7 +185,8 @@ def perform_designi_download_task(
             except Exception: pass
         return {'success': False, 'error': f"Executável navegador não encontrado.", 'duration_seconds': time.time() - start_time }
 
-    login_bem_sucedido = False # Flag para controlar o status do login
+
+    login_bem_sucedido = False
 
     try:
         with sync_playwright() as p:
@@ -171,7 +195,7 @@ def perform_designi_download_task(
                 browser = p.chromium.launch(**launch_options)
                 context = browser.new_context(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
                 page = context.new_page()
-                page.set_default_timeout(90000) # Timeout geral padrão
+                page.set_default_timeout(90000)
 
                 # === TENTATIVA DE LOGIN COM COOKIES ===
                 if saved_cookies:
@@ -179,22 +203,16 @@ def perform_designi_download_task(
                     try:
                         context.add_cookies(saved_cookies)
                         print(f"[TASK LOG] Cookies adicionados. Navegando para URL do arquivo para verificar login: {designi_url}")
-                        page.goto(designi_url, wait_until='networkidle', timeout=60000) # Timeout navegação
+                        page.goto(designi_url, wait_until='networkidle', timeout=60000)
                         print(f"[TASK LOG] Página carregada ({page.url}). Verificando status do login...")
 
-                        # >>> NOVA VERIFICAÇÃO DE LOGIN <<<
+                        # >>> VERIFICAÇÃO DE LOGIN (Nova Função) <<<
                         if check_login_status(page):
                              print("[TASK LOG] Verificação de login com cookies BEM-SUCEDIDA.")
                              login_bem_sucedido = True
                         else:
                              print("[TASK WARNING] Verificação de login com cookies FALHOU. Tentará login manual.")
-                             # Tira screenshot se a verificação de cookie falhar
-                             cookie_fail_path = os.path.join(temp_dir, f'cookie_login_fail_{int(time.time())}.png')
-                             try:
-                                 page.screenshot(path=cookie_fail_path)
-                                 upload_debug_screenshot_to_drive(drive_service, cookie_fail_path, folder_id, "COOKIE_LOGIN_FAIL")
-                             except Exception as ss_cookie_err:
-                                 print(f"[TASK WARNING] Falha ao tirar/upload screenshot de falha de cookie login: {ss_cookie_err}")
+                             # Upload do screenshot já é feito dentro de check_login_status se falhar
 
                     except Exception as cookie_err:
                         print(f"[TASK WARNING] Erro ao tentar usar cookies/navegar: {cookie_err}. Tentará login manual.")
@@ -204,6 +222,7 @@ def perform_designi_download_task(
                 # === TENTATIVA DE LOGIN MANUAL (se necessário) ===
                 if not login_bem_sucedido:
                     print("[TASK LOG] Iniciando processo de login manual...")
+                    # ... (Navegar para login, preencher email/senha, solve_captcha - igual) ...
                     print(f"[TASK LOG] Acessando página de login: {url_login}")
                     page.goto(url_login, wait_until='networkidle', timeout=60000)
                     if not email or not senha: raise ValueError('Credenciais Designi não fornecidas.')
@@ -211,23 +230,23 @@ def perform_designi_download_task(
                     print("[TASK LOG] Preenchendo credenciais...")
                     page.fill("input[name=email]", email, timeout=30000)
                     page.fill("input[name=password]", senha, timeout=30000)
-                    solve_captcha(page, captcha_api_key, url_login) # Tenta resolver captcha se aparecer
+                    solve_captcha(page, captcha_api_key, url_login)
 
                     print("[TASK LOG] Tentando clicar botão login...")
-                    # Usar um seletor mais robusto para o botão de login
                     login_button_locator = page.locator('button[type="submit"]:has-text("login"), button:has-text("Entrar"), input[type="submit"][value*="Login" i]').first
                     login_button_locator.wait_for(state="visible", timeout=30000)
                     login_button_locator.click()
 
-                    print("[TASK LOG] Aguardando navegação pós-login...")
+                    print("[TASK LOG] Aguardando navegação pós-login ou indicador...")
+                    # Espera um pouco mais flexível: ou a URL muda OU a verificação de login passa
+                    # Isso pode ser complexo, vamos manter a espera pela URL e depois verificar
                     try:
-                        # Espera por um URL diferente OU por um indicador de login, o que ocorrer primeiro
                         page.wait_for_url(lambda url: "/login" not in url, timeout=60000)
                         print(f"[TASK LOG] Navegou para fora da página de login. URL atual: {page.url}")
                     except Exception as nav_err:
-                        # Mesmo se wait_for_url falhar, verifica se saiu do login e se consegue ver logout
                          if "/login" in page.url:
                               print(f"[TASK ERROR] Falha ao sair da página de login após clique.")
+                              # ... (screenshot e upload de erro de navegação) ...
                               login_fail_path = os.path.join(temp_dir, f'manual_login_nav_fail_{int(time.time())}.png')
                               try:
                                    page.screenshot(path=login_fail_path)
@@ -237,35 +256,31 @@ def perform_designi_download_task(
                          else:
                               print(f"[TASK WARNING] Timeout ao esperar URL pós-login, mas URL mudou para: {page.url}. Verificando status...")
 
-                    # >>> NOVA VERIFICAÇÃO DE LOGIN PÓS-MANUAL <<<
+
+                    # >>> VERIFICAÇÃO DE LOGIN PÓS-MANUAL (Nova Função) <<<
                     print("[TASK LOG] Verificando status do login após tentativa manual...")
+                    time.sleep(2) # Pequena pausa antes de verificar
                     if check_login_status(page):
                         print("[TASK LOG] Verificação de login manual BEM-SUCEDIDA.")
                         login_bem_sucedido = True
                         # Salvar cookies APÓS confirmação do login manual
                         try:
                             cookies = context.cookies()
-                            from app import save_designi_cookies # Importa aqui
+                            from app import save_designi_cookies
                             save_designi_cookies(cookies, client_ip)
                             print("[TASK LOG] Cookies salvos após login manual bem-sucedido.")
-                        except ImportError: print("[TASK WARNING] Não importou save_designi_cookies. Cookies não serão salvos.")
+                        except ImportError: print("[TASK WARNING] Não importou save_designi_cookies...")
                         except Exception as save_err: print(f"[TASK WARNING] Erro ao salvar cookies: {save_err}")
                     else:
-                        print("[TASK ERROR] Verificação de login manual FALHOU.")
-                        manual_fail_path = os.path.join(temp_dir, f'manual_login_verify_fail_{int(time.time())}.png')
-                        try:
-                            page.screenshot(path=manual_fail_path)
-                            upload_debug_screenshot_to_drive(drive_service, manual_fail_path, folder_id, "MANUAL_LOGIN_VERIFY_FAIL")
-                        except Exception as ss_manual_err: print(f"[TASK WARNING] Falha screenshot falha verificação login manual: {ss_manual_err}")
-                        raise Exception("Login manual realizado, mas verificação falhou (não encontrou indicador 'Sair').")
+                        print("[TASK ERROR] Verificação de login manual FALHOU (baseado na nova função).")
+                        # Upload do screenshot de falha já é feito dentro de check_login_status
+                        raise Exception("Login manual realizado, mas verificação falhou (msg sucesso não vista / botão Entrar ainda visível).")
 
                 # === PROCEDER PARA DOWNLOAD (APENAS SE LOGIN FOI BEM SUCEDIDO) ===
                 if not login_bem_sucedido:
-                    # Isso não deveria acontecer se a lógica acima estiver correta, mas é uma segurança
                     raise Exception("Estado de login inconsistente. Não foi possível confirmar login.")
 
-                # Garante que estamos na página correta ANTES de procurar o botão
-                # Se já navegamos pra lá na verificação de cookie, ok. Senão, navega agora.
+                # Garante que estamos na página correta
                 if page.url != designi_url:
                      print(f"[TASK LOG] Navegando para a URL final do arquivo: {designi_url}")
                      page.goto(designi_url, wait_until='networkidle', timeout=60000)
@@ -273,33 +288,28 @@ def perform_designi_download_task(
                 else:
                      print(f"[TASK LOG] Já está na URL do arquivo ({page.url}).")
 
-
+                # Procurar botão de Download
                 print("[TASK LOG] Procurando botão download (usando #downButton)...")
                 download_button_selector = "#downButton"
                 download_button = page.locator(download_button_selector)
-
                 try:
-                    # Tira screenshot ANTES de esperar (agora que TEMOS CERTEZA que estamos logados)
+                    # Screenshot ANTES de esperar pelo botão (logado)
                     screenshot_path_before = os.path.join(temp_dir, f'before_wait_downbutton_LOGGEDIN_{int(time.time())}.png')
                     print(f"[TASK DEBUG] Tirando screenshot ANTES de esperar pelo botão (logado): {screenshot_path_before}")
                     page.screenshot(path=screenshot_path_before)
                     print(f"[TASK DEBUG] Screenshot 'antes' salvo localmente. Esperando por {download_button_selector} ficar visível...")
 
-                    download_button.wait_for(state="visible", timeout=180000) # Mantém timeout alto por segurança
+                    download_button.wait_for(state="visible", timeout=180000)
                     print("[TASK LOG] Botão #downButton visível encontrado!")
-                    # Deleta screenshot local 'antes' se deu certo
                     if os.path.exists(screenshot_path_before):
                          try: os.remove(screenshot_path_before)
-                         except Exception: pass # Falha silenciosa na remoção
+                         except Exception: pass
 
                 except Exception as btn_err:
                     print(f"[TASK ERROR] Timeout ou erro ao esperar por #downButton (mesmo após login verificado): {btn_err}")
-                    # Tenta upload do screenshot 'antes' que foi tirado quando logado
                     if os.path.exists(screenshot_path_before):
                         print(f"[TASK DEBUG] Tentando upload do screenshot 'antes' ({screenshot_path_before}) devido ao erro.")
                         upload_debug_screenshot_to_drive(drive_service, screenshot_path_before, folder_id, "BEFORE_WAIT_LOGGEDIN_FAIL")
-
-                    # Tira screenshot 'depois' da falha
                     screenshot_path_after_fail = os.path.join(temp_dir, f'after_fail_wait_downbutton_LOGGEDIN_{int(time.time())}.png')
                     try:
                         page.screenshot(path=screenshot_path_after_fail)
@@ -308,18 +318,17 @@ def perform_designi_download_task(
                     except Exception as ss_fail_err: print(f"[TASK WARNING] Falha ao tirar/upload screenshot 'depois': {ss_fail_err}")
                     raise Exception(f"Login verificado, mas botão de download ('#downButton') não encontrado/visível após 180s.")
 
-                # --- Lógica de Clique, Popup e Download (Igual ao anterior) ---
+                # --- Lógica de Clique, Popup e Download ---
+                # ... (código igual: expect_download, click, popup, save_as, etc) ...
                 print("[TASK LOG] Configurando espera download...")
-                # ... (código expect_download, click, popup, save_as, verificação de arquivo vazio - igual) ...
                 with page.expect_download(timeout=300000) as download_info:
-                    # ... (clique, popup, etc) ...
                     print("[TASK LOG] Clicando botão #downButton...")
                     download_button.click()
+                    # ... (resto da lógica igual) ...
                     print("[TASK LOG] Clique realizado, aguardando popup/download...")
                     time.sleep(3) # Pausa
                     thank_you_popup = page.locator("div.modal-content:has-text('Obrigado por baixar meu arquivo!')")
                     if thank_you_popup.count() > 0:
-                         # ... (lógica fechar popup) ...
                          print("[TASK LOG] Popup agradecimento detectado")
                          close_button = thank_you_popup.locator("button[aria-label='Close'], button:has-text('Fechar'), button.close, [data-bs-dismiss='modal']").first
                          try:
@@ -338,7 +347,6 @@ def perform_designi_download_task(
                 if not download: raise Exception("Evento download não ocorreu ou timeout excedido (300s).")
 
                 suggested_filename = download.suggested_filename or f"designi_download_{int(time.time())}.file"
-                # ... (limpeza filename, temp_file_path) ...
                 suggested_filename = "".join(c for c in suggested_filename if c.isalnum() or c in ('.', '_', '-')).rstrip()
                 temp_file_path = os.path.join(temp_dir, suggested_filename)
 
@@ -347,7 +355,8 @@ def perform_designi_download_task(
                 print(f"[TASK LOG] Download concluído: {temp_file_path}")
 
                 if not os.path.exists(temp_file_path) or os.path.getsize(temp_file_path) == 0:
-                     failure_reason = download.failure() # Sem await
+                     failure_reason = download.failure()
+                     # ... (screenshot e upload de falha de download) ...
                      download_fail_path = os.path.join(temp_dir, f'download_fail_{int(time.time())}.png')
                      try:
                           page.screenshot(path=download_fail_path)
@@ -362,6 +371,7 @@ def perform_designi_download_task(
             except Exception as pw_error:
                 # Erro genérico Playwright
                 print(f"[TASK ERROR] Erro durante automação Playwright: {pw_error}")
+                # ... (screenshot e upload de erro playwright) ...
                 if 'page' in locals() and page and not page.is_closed():
                     screenshot_path_generic_error = os.path.join(temp_dir, f'playwright_error_{int(time.time())}.png')
                     try:
@@ -381,14 +391,15 @@ def perform_designi_download_task(
                  raise Exception("Serviço Google Drive indisponível.")
 
              print("[TASK LOG] Iniciando upload Google Drive do arquivo principal...")
-             # ... (Código de upload igual ao anterior) ...
+             # ... (Código de upload principal inalterado) ...
              filename = os.path.basename(temp_file_path)
              file_metadata = {'name': filename}
-             if folder_id: file_metadata['parents'] = [folder_id] # Pasta principal
+             if folder_id: file_metadata['parents'] = [folder_id]
              mimetype, _ = mimetypes.guess_type(temp_file_path)
              mimetype = mimetype or 'application/octet-stream'
              media = MediaFileUpload(temp_file_path, mimetype=mimetype, resumable=True)
              print(f"[TASK LOG] Enviando '{filename}' ({mimetype}, {os.path.getsize(temp_file_path)} bytes) para Google Drive...")
+             # ... (try/except upload, permissão, etc - inalterado) ...
              try:
                  file = drive_service.files().create(body=file_metadata, media_body=media, fields='id, webViewLink').execute()
                  print(f"[TASK LOG] Upload Drive concluído. ID: {file.get('id')}")
@@ -401,6 +412,7 @@ def perform_designi_download_task(
                  print("[TASK LOG] Permissão pública definida.")
              except Exception as perm_err:
                  print(f"[TASK WARNING] Falha ao definir permissão pública para {file.get('id')}: {perm_err}")
+
 
              end_time = time.time(); duration = end_time - start_time
              print(f"[TASK SUCCESS] Tarefa concluída com sucesso em {duration:.2f} segundos.")
@@ -421,7 +433,5 @@ def perform_designi_download_task(
         end_time = time.time(); duration = end_time - start_time
         error_message = f"Erro na tarefa download: {getattr(e, 'message', str(e))}"
         print(f"[TASK FAILED] {error_message} (Duração: {duration:.2f}s)")
-        print(traceback.format_exc()) # Log completo do erro
+        print(traceback.format_exc())
         return {'success': False, 'error': error_message, 'duration_seconds': duration}
-
-    # O finally aqui não é mais necessário para limpeza principal
