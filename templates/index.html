@@ -331,13 +331,15 @@
              submitButton.querySelector('.loading').classList.remove('hidden');
              
             try { const response = await fetch('/upload', { method: 'POST', body: new FormData(form) }); const dataHtml = await response.text();
-                 if (response.status === 429 || !response.ok) { addHistoryItem(dataHtml || `<div class="alert alert-danger">❌ Erro ${response.status}.</div>`); await fetchAndUpdateStatus(); return; }
-                addHistoryItem(dataHtml); // Adiciona resultado direto (já é HTML)
-                if (dataHtml.includes('alert-success') || dataHtml.includes('Upload concluído')) { linkInput.value = ''; setLinkValidity('freepik', true);}
-                await fetchAndUpdateStatus();
+                 if (response.status === 429 || !response.ok) { addHistoryItem(dataHtml || `<div class="alert alert-danger">❌ Erro ${response.status}.</div>`); await fetchAndUpdateStatus(); }
+                 else {
+                     addHistoryItem(dataHtml); // Adiciona resultado direto (já é HTML)
+                     if (dataHtml.includes('alert-success') || dataHtml.includes('Upload concluído')) { linkInput.value = ''; setLinkValidity('freepik', true);}
+                     await fetchAndUpdateStatus();
+                 }
             } catch (error) { console.error('Erro fetch /upload:', error); addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${error.message}</div>`); }
             finally { 
-                // Restaura o estado do botão
+                // Restaura o estado do botão - Garantindo que sempre execute
                 submitButton.disabled = false;
                 submitButton.querySelector('.normal-state').classList.remove('hidden');
                 submitButton.querySelector('.loading').classList.add('hidden');
