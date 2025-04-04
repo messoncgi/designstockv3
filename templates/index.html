@@ -76,7 +76,7 @@
                 <p class="text-text-secondary text-center mb-6">Cole seu link Freepik ou Designi para baixar.</p>
 
                 <div id="userStatus" class="mb-6 h-12 flex items-center justify-center">
-                    {/* Status */}
+                    <!-- Status -->
                 </div>
 
                 <ul class="flex justify-center border-b border-card-border mb-6" id="myTab" role="tablist">
@@ -85,7 +85,7 @@
                 </ul>
 
                 <div class="tab-content" id="myTabContent">
-                    {/* Aba Freepik */}
+                    <!-- Aba Freepik -->
                     <div class="tab-pane fade show active" id="freepikTab" role="tabpanel" aria-labelledby="freepik-tab">
                         <form id="uploadForm">
                             <div class="mb-3">
@@ -102,7 +102,7 @@
                             </button>
                         </form>
                     </div>
-                    {/* Aba Designi */}
+                    <!-- Aba Designi -->
                     <div class="tab-pane fade" id="designiTab" role="tabpanel" aria-labelledby="designi-tab">
                         <form id="designiForm" onsubmit="downloadDesigni(event)">
                             <div class="mb-3">
@@ -122,7 +122,7 @@
                 </div>
             </div>
 
-             {/* Área do Histórico */}
+             <!-- Área do Histórico -->
              <div class="px-6 md:px-8 pb-6">
                 <div id="uploadHistory" class="mt-6 border-t border-card-border pt-4">
                     <div class="flex justify-between items-center mb-4">
@@ -134,13 +134,13 @@
                          </button>
                     </div>
                     <div id="historyItems" class="space-y-3 max-h-72 overflow-y-auto pr-2">
-                        {/* Itens do histórico */}
+                        <!-- Itens do histórico -->
                     </div>
                 </div>
              </div>
-        </div> {/* Fim do glass-card */}
+        </div> <!-- Fim do glass-card -->
 
-        {/* Footer Atualizado */}
+        <!-- Footer Atualizado -->
         <footer class="text-center text-xs text-text-secondary mt-6 opacity-80">
              <div class="mb-2">Feito com <i class="bi bi-heart-fill text-red-500 mx-1"></i> e Rapadura</div>
              <div class="space-x-3 mb-1">
@@ -151,12 +151,22 @@
               <div class="opacity-75">Beta v1</div>
         </footer>
 
-    </div> {/* Fim do container principal */}
+    </div> <!-- Fim do container principal -->
 
-    {/* Bootstrap Bundle JS */}
+    <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Inicialização manual do Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializa as abas do Bootstrap manualmente
+            const tabElements = document.querySelectorAll('[data-bs-toggle="tab"]');
+            tabElements.forEach(function(tabEl) {
+                new bootstrap.Tab(tabEl);
+            });
+        });
+    </script>
 
-    {/* === Script Principal com Validação, Histórico, Animação === */}
+    <!-- === Script Principal com Validação, Histórico, Animação === -->
     <script>
         // Variáveis e Constantes Globais
         const activePolls = {};
@@ -290,7 +300,12 @@
         async function downloadDesigni(event) {
             event.preventDefault(); const form = document.getElementById('designiForm'); const linkInput = document.getElementById('designi_link'); const link = linkInput.value; const submitButton = form.querySelector('button[type="submit"]');
             if (!link || !isValidDesigniLink(link)) { setLinkValidity('designi', false, 'Link inválido.'); return; }
-            setLinkValidity('designi', true); submitButton.disabled = true;
+            setLinkValidity('designi', true); 
+            // Desabilita o botão e mostra o estado de carregamento
+            submitButton.disabled = true;
+            submitButton.querySelector('.normal-state').classList.add('hidden');
+            submitButton.querySelector('.loading').classList.remove('hidden');
+            
             try { const response = await fetch('/download-designi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: link }) });
                 let responseData = {}; try { responseData = await response.json(); } catch (e) { /* Ignora se não for json */ }
                 if (response.status === 429) { addHistoryItem(`<div class="alert alert-warning">✋ ${responseData.error || 'Limite atingido.'}</div>`); await fetchAndUpdateStatus(); return; }
@@ -299,19 +314,34 @@
                 else { addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${responseData.error || 'Resposta inesperada.'}</div>`); }
                 await fetchAndUpdateStatus();
             } catch (error) { console.error('Erro fetch /download-designi:', error); addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${error.message}</div>`); }
-            finally { submitButton.disabled = false; }
+            finally { 
+                // Restaura o estado do botão
+                submitButton.disabled = false;
+                submitButton.querySelector('.normal-state').classList.remove('hidden');
+                submitButton.querySelector('.loading').classList.add('hidden');
+            }
          }
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault(); const form = this; const linkInput = document.getElementById('freepik_link'); const submitButton = form.querySelector('button[type="submit"]');
              if (!linkInput.value || !isValidFreepikLink(linkInput.value)) { setLinkValidity('freepik', false, 'Link inválido.'); return; }
-             setLinkValidity('freepik', true); submitButton.disabled = true;
+             setLinkValidity('freepik', true); 
+             // Desabilita o botão e mostra o estado de carregamento
+             submitButton.disabled = true;
+             submitButton.querySelector('.normal-state').classList.add('hidden');
+             submitButton.querySelector('.loading').classList.remove('hidden');
+             
             try { const response = await fetch('/upload', { method: 'POST', body: new FormData(form) }); const dataHtml = await response.text();
                  if (response.status === 429 || !response.ok) { addHistoryItem(dataHtml || `<div class="alert alert-danger">❌ Erro ${response.status}.</div>`); await fetchAndUpdateStatus(); return; }
                 addHistoryItem(dataHtml); // Adiciona resultado direto (já é HTML)
                 if (dataHtml.includes('alert-success') || dataHtml.includes('Upload concluído')) { linkInput.value = ''; setLinkValidity('freepik', true);}
                 await fetchAndUpdateStatus();
             } catch (error) { console.error('Erro fetch /upload:', error); addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${error.message}</div>`); }
-            finally { submitButton.disabled = false; }
+            finally { 
+                // Restaura o estado do botão
+                submitButton.disabled = false;
+                submitButton.querySelector('.normal-state').classList.remove('hidden');
+                submitButton.querySelector('.loading').classList.add('hidden');
+            }
         });
 
         // --- Validação de Link no Cliente ---
