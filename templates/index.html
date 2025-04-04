@@ -3,213 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RapaduraStock</title>
-
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
+    <title>DesignStock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {'primary-accent': '#3b82f6','primary-accent-hover': '#2563eb','primary-accent-glow': 'rgba(59, 130, 246, 0.4)','card-bg': 'rgba(23, 23, 23, 0.6)','card-border': 'rgba(255, 255, 255, 0.1)','input-bg': 'rgba(38, 38, 38, 0.7)','input-border': 'rgba(255, 255, 255, 0.15)','text-main': '#f4f4f5','text-secondary': '#a1a1aa','text-placeholder': '#71717a','success': '#22c55e','danger': '#ef4444',},
-                    fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'], },
-                    borderRadius: { 'xl': '1rem', 'lg': '0.75rem', },
-                     keyframes: { animatedGradient: { '0%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' }, '100%': { backgroundPosition: '0% 50%' }, }, },
-                      animation: { gradient: 'animatedGradient 15s ease infinite', },
-                }
-            }
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass-card { background-color: theme('colors.card-bg', 'rgba(23, 23, 23, 0.6)'); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border: 1px solid theme('colors.card-border', 'rgba(255, 255, 255, 0.1)'); }
-        .validation-feedback { font-size: 0.75rem; margin-top: 0.25rem; min-height: 1rem; } .validation-feedback.invalid { color: theme('colors.danger', '#ef4444'); } input.invalid-link { border-color: theme('colors.danger', '#ef4444') !important; }
-        #historyItems::-webkit-scrollbar { width: 6px; } #historyItems::-webkit-scrollbar-track { background: transparent; } #historyItems::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 3px; } #historyItems { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.2) transparent; }
-        .btn-glow-hover { transition: background-color 0.2s ease, box-shadow 0.3s ease, transform 0.1s ease; } .btn-glow-hover:hover:not(:disabled) { box-shadow: 0 0 15px 4px theme('colors.primary-accent-glow', 'rgba(59, 130, 246, 0.4)'); } .btn-glow-hover:active:not(:disabled) { transform: scale(0.98); }
-        #myTab .nav-link.active { color: theme('colors.primary-accent'); border-color: theme('colors.primary-accent'); }
-        .alert { padding: 0.8rem 1rem; border-radius: 0.5rem; border-width: 1px; border-left-width: 4px; } .alert-info { color: #60a5fa; border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6; } .alert-success { color: #4ade80; border-color: #22c55e; background-color: rgba(34, 197, 94, 0.1); border-left-color: #22c55e; } .alert-warning { color: #facc15; border-color: #eab308; background-color: rgba(234, 179, 8, 0.1); border-left-color: #eab308; } .alert-danger { color: #f87171; border-color: #ef4444; background-color: rgba(239, 68, 68, 0.1); border-left-color: #ef4444;} .alert-secondary { color: #a1a1aa; border-color: #71717a; background-color: rgba(113, 113, 122, 0.1); border-left-color: #71717a;}
-        .history-item-internal-alert { font-size: 0.875rem; margin-bottom: 0; padding: 0; background-color: transparent; border: none; border-left-width: 3px; padding-left: 0.75rem; }
-        .history-item-download-link { display: inline-block; padding: 0.25rem 0.75rem; background-color: theme('colors.primary-accent'); color: white; border-radius: 0.375rem; font-size: 0.75rem; transition: background-color 0.2s ease; margin-top: 0.5rem; font-weight: 500; } .history-item-download-link:hover { background-color: theme('colors.primary-accent-hover'); }
-        .history-item-muted-text { color: theme('colors.text-secondary'); font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem; display: block; }
-        .btn-submit-loading .spinner-border { width: 1.1em; height: 1.1em; border-width: .2em; margin-right: 0.6em; }
-        .submit-button.is-normal .loading { display: none; } .submit-button.is-normal .normal-state { display: inline-flex; align-items: center; }
-        .submit-button.is-loading .loading { display: inline-flex; align-items: center; } .submit-button.is-loading .normal-state { display: none; }
+        /* Estilos CSS Inalterados */
+        .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; background: #f8f9fa; }
+        .upload-area:hover { border-color: #0d6efd; background: #f1f3f5; }
+        .loading { display: none; }
+        .tutorial-section { margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #0d6efd; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; }
+        .tutorial-step { margin-bottom: 10px; padding-left: 10px; }
+        #historyItems .card { border-left: 3px solid #0d6efd; }
+        #historyItems .alert { margin-bottom: 0; }
+        .history-item-pending .spinner-border { width: 1rem; height: 1rem; border-width: .2em; margin-right: 0.5em; }
     </style>
 </head>
-<body class="bg-zinc-950 text-text-main min-h-screen flex items-center justify-center p-4 animate-gradient">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container"><a class="navbar-brand" href="#">DesignStock</a><span class="navbar-text text-light">BETA V1</span></div>
+    </nav>
 
-    <div
-        class="w-full max-w-xl"
-        x-data="{ loaded: false }"
-        x-init="() => { setTimeout(() => { loaded = true }, 100) }"
-        x-show="loaded"
-        x-transition:enter="transition ease-out duration-500"
-        x-transition:enter-start="opacity-0 scale-95"
-        x-transition:enter-end="opacity-100 scale-100"
-    >
-        <div class="glass-card rounded-xl shadow-2xl overflow-hidden">
-            <div class="p-6 md:p-8">
-                <h1 class="text-2xl md:text-3xl font-bold text-center mb-2 text-text-main">RapaduraStock</h1>
-                <p class="text-text-secondary text-center mb-6">Cole seu link Freepik ou Designi para baixar.</p>
-                <div id="userStatus" class="mb-6 h-12 flex items-center justify-center"></div>
-                <ul class="flex justify-center border-b border-card-border mb-6" id="myTab" role="tablist">
-                    <li><button class="nav-link py-3 px-5 border-b-2 border-transparent text-text-secondary hover:text-text-main hover:border-gray-500 transition duration-200 focus:outline-none active" id="freepik-tab" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab" aria-controls="freepikTab" aria-selected="true">Freepik</button></li>
-                    <li><button class="nav-link py-3 px-5 border-b-2 border-transparent text-text-secondary hover:text-text-main hover:border-gray-500 transition duration-200 focus:outline-none" id="designi-tab" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab" aria-controls="designiTab" aria-selected="false">Designi</button></li>
-                </ul>
-                <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="freepikTab" role="tabpanel" aria-labelledby="freepik-tab">
-                        <form id="uploadForm">
-                            <div class="mb-3">
-                                <label for="freepik_link" class="block text-sm font-medium text-text-secondary mb-1">Link Freepik</label>
-                                <input type="text" id="freepik_link" name="freepik_link" required class="w-full px-4 py-2.5 bg-input-bg border border-input-border rounded-lg text-text-main placeholder-text-placeholder focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent transition duration-200" placeholder="Cole o link do Freepik aqui...">
-                                <div id="freepik_link_feedback" class="validation-feedback"></div>
-                            </div>
-                            <button type="submit" id="freepikSubmitBtn" class="submit-button is-normal btn-glow-hover w-full flex items-center justify-center px-6 py-3 bg-primary-accent hover:bg-primary-accent-hover rounded-lg text-white font-medium disabled:opacity-50 transition duration-200">
-                                <span class="normal-state"><i class="bi bi-cloud-arrow-down-fill mr-2"></i> Baixar do Freepik</span>
-                                <span class="loading btn-submit-loading"><span class="spinner-border animate-spin" role="status"></span> Processando...</span>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="tab-pane fade" id="designiTab" role="tabpanel" aria-labelledby="designi-tab">
-                        <form id="designiForm" onsubmit="downloadDesigni(event)">
-                            <div class="mb-3">
-                                <label for="designi_link" class="block text-sm font-medium text-text-secondary mb-1">Link Designi</label>
-                                <input type="text" id="designi_link" name="designi_link" required class="w-full px-4 py-2.5 bg-input-bg border border-input-border rounded-lg text-text-main placeholder-text-placeholder focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent transition duration-200" placeholder="Cole o link do Designi aqui...">
-                                <div id="designi_link_feedback" class="validation-feedback"></div>
-                            </div>
-                             <button type="submit" id="designiSubmitBtn" class="submit-button is-normal btn-glow-hover w-full flex items-center justify-center px-6 py-3 bg-primary-accent hover:bg-primary-accent-hover rounded-lg text-white font-medium disabled:opacity-50 transition duration-200">
-                                <span class="normal-state"><i class="bi bi-cloud-arrow-down-fill mr-2"></i> Baixar do Designi</span>
-                                <span class="loading btn-submit-loading"><span class="spinner-border animate-spin" role="status"></span> Processando...</span>
-                            </button>
-                        </form>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Baixe Arquivos Premium Grátis</h5>
+                        <!-- REINTRODUZIDO: Div para status -->
+                        <div id="userStatus" class="mb-3">
+                            <!-- Status será carregado aqui -->
+                            <div class="alert alert-secondary">Carregando status...</div>
+                        </div>
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                             <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab">Freepik</button></li>
+                             <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab">Designi</button></li>
+                        </ul>
+
+                        <div class="tab-content">
+                             <!-- Abas Freepik e Designi (HTML inalterado) -->
+                             <div class="tab-pane fade show active" id="freepikTab" role="tabpanel">
+                                 <form id="uploadForm">
+                                     <div class="upload-area">
+                                         <div class="mb-3"><label for="freepik_link" class="form-label">Link do Freepik</label><input type="text" class="form-control" id="freepik_link" name="freepik_link" placeholder="https://www.freepik.com/photo/12345678.htm" required></div>
+                                         <button type="submit" class="btn btn-primary"><span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span><span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span></button>
+                                     </div>
+                                 </form>
+                             </div>
+                             <div class="tab-pane fade" id="designiTab" role="tabpanel">
+                                 <form id="designiForm" onsubmit="downloadDesigni(event)">
+                                     <div class="upload-area">
+                                         <div class="mb-3"><label for="designi_link" class="form-label">Link do Designi</label><input type="text" class="form-control" id="designi_link" placeholder="Cole aqui a URL do arquivo do Designi" required></div>
+                                         <button type="submit" class="btn btn-primary"><span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span><span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span></button>
+                                     </div>
+                                 </form>
+                             </div>
+                        </div>
+
+                        <div id="uploadHistory" class="mt-4">
+                            <h6 class="card-subtitle mb-3 text-center text-muted">Histórico de Respostas</h6>
+                            <div id="historyItems"></div>
+                        </div>
+
+                        <div class="tutorial-section">
+                             <h6><i class="bi bi-info-circle"></i> Como Funciona</h6>
+                             <div class="tutorial-step">1. Cole o link (Freepik ou Designi) no campo.</div>
+                             <div class="tutorial-step">2. Clique em "Baixar".</div>
+                             <div class="tutorial-step">3. **Freepik:** Aguarde. O link do Google Drive aparecerá no histórico.</div>
+                             <div class="tutorial-step">4. **Designi:** Uma mensagem de "Processo iniciado..." aparecerá. Aguarde! O resultado final (link ou erro) substituirá essa mensagem no histórico.</div>
+                             <div class="tutorial-step">5. **Limite:** Você pode baixar até 2 arquivos por dia. Verifique seu status acima.</div>
+                        </div>
                     </div>
                 </div>
+                <div class="footer d-flex justify-content-between"><div>Feito com <i class="bi bi-heart-fill text-danger"></i></div><div>BETA V1</div></div>
             </div>
-
-             <div class="px-6 md:px-8 pb-6">
-                <div id="uploadHistory" class="mt-6 border-t border-card-border pt-4">
-                    <div class="flex justify-between items-center mb-4">
-                         <h2 class="text-lg font-medium text-text-secondary">Histórico Recente</h2>
-                         <button id="clearHistoryBtn" class="text-xs text-text-secondary hover:text-red-400 transition duration-200 opacity-75 hover:opacity-100" title="Limpar histórico do navegador"><i class="bi bi-trash mr-1"></i> Limpar</button>
-                    </div>
-                    <div id="historyItems" class="space-y-3 max-h-72 overflow-y-auto pr-2"></div>
-                </div>
-             </div>
         </div>
-
-        <footer class="text-center text-xs text-text-secondary mt-6 opacity-80">
-             <div class="mb-2">Feito com <i class="bi bi-heart-fill text-red-500 mx-1"></i> e Rapadura</div>
-             <div class="space-x-3 mb-1">
-                 <span class="font-medium">Suporte:</span>
-                 <a href="mailto:suporte@rapadurastock.com" class="hover:text-primary-accent transition-colors"><i class="bi bi-envelope-fill mr-1"></i>Email</a>
-                 <a href="https://www.instagram.com/rapadurastock/" target="_blank" rel="noopener noreferrer" class="hover:text-primary-accent transition-colors"><i class="bi bi-instagram mr-1"></i>Instagram</a>
-             </div>
-              <div class="opacity-75">Beta v1</div>
-        </footer>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        // Variáveis e Constantes Globais
         const activePolls = {};
-        const HISTORY_STORAGE_KEY = 'rapaduraStockHistory';
-        const MAX_HISTORY_ITEMS = 20;
-        const mensagensFun = ["Calma lá, apressadinho(a)! Limite diário atingido.","Eita! Já deu por hoje. Volte amanhã para mais downloads!","Limite de 2 downloads alcançado. Dê um descanso pro servidor!","Você está demais! Mas o limite diário já foi... tente amanhã.","Parabéns, você zerou os downloads de hoje! 🎉"];
 
-        // --- Funções Utilitárias ---
-        function getMensagemFun() { return mensagensFun[Math.floor(Math.random() * mensagensFun.length)]; }
+        // --- REINTRODUZIDO: Mensagens divertidas ---
+        const mensagensFun = [
+            "Calma lá, apressadinho(a)! Limite diário atingido.",
+            "Eita! Já deu por hoje. Volte amanhã para mais downloads!",
+            "Limite de 2 downloads alcançado. Dê um descanso pro servidor!",
+            "Você está demais! Mas o limite diário já foi... tente amanhã.",
+            "Parabéns, você zerou os downloads de hoje! 🎉"
+        ];
+        function getMensagemFun() {
+            return mensagensFun[Math.floor(Math.random() * mensagensFun.length)];
+        }
 
-        // --- Funções de Status ---
-         function updateStatusDisplay(statusHtml) { /* ... código igual ... */ }
-         async function fetchAndUpdateStatus() { /* ... código igual ... */ }
+        // --- REINTRODUZIDO: Função para atualizar display do status ---
+         function updateStatusDisplay(statusHtml) {
+              const userStatus = document.getElementById('userStatus');
+              if (!userStatus) return; // Sai se o elemento não existir
 
-        // --- Funções de Histórico (LocalStorage) ---
-        function getHistoryFromStorage() { /* ... código igual ... */ }
-        function saveHistoryToStorage(historyArray) { /* ... código igual ... */ }
-        function applyStylesToHistoryItem(itemWrapper) { /* ... código igual ... */ }
-        function renderHistory() { /* ... código igual ... */ }
-        function addHistoryItem(contentHtml, itemId = null) { /* ... código igual ... */ }
-        function clearHistory() { /* ... código igual ... */ }
+              // Verifica se o HTML contém a mensagem de limite atingido do backend
+              if (statusHtml.includes("Você atingiu o limite")) {
+                  const mensagemFun = getMensagemFun();
+                  // Cria um alerta de aviso com a mensagem divertida
+                  userStatus.innerHTML = `<div class="alert alert-warning">${mensagemFun}</div>`;
+              } else {
+                  // Se não atingiu o limite, usa o HTML recebido do backend
+                  userStatus.innerHTML = statusHtml;
+              }
+         }
 
-        // --- Função de Polling ---
-        function pollJobStatus(jobId) { /* ... código igual ... */ }
+         // --- REINTRODUZIDO: Função para buscar e atualizar status ---
+         async function fetchAndUpdateStatus() {
+             try {
+                 const response = await fetch('/status');
+                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                 const data = await response.text();
+                 updateStatusDisplay(data); // Chama a função que lida com a exibição
+             } catch (error) {
+                 console.error('Erro ao carregar status:', error);
+                 const userStatus = document.getElementById('userStatus');
+                 if(userStatus) userStatus.innerHTML = '<div class="alert alert-danger">Erro ao carregar status.</div>';
+             }
+         }
 
-        // --- Funções de Download (Designi e Freepik) ---
+        // Função para adicionar item ao histórico (inalterada)
+        function addHistoryItem(contentHtml, itemId = null) {
+            const historyDiv = document.getElementById('historyItems');
+            const newHistoryItem = document.createElement('div');
+            newHistoryItem.className = 'card mb-3 history-item';
+            if (itemId) { newHistoryItem.id = `history-item-${itemId}`; }
+            if (contentHtml.includes('alert alert-')) { newHistoryItem.innerHTML = `<div class="card-body p-0">${contentHtml}</div>`; }
+            else { newHistoryItem.innerHTML = `<div class="card-body">${contentHtml}</div>`; }
+            historyDiv.insertBefore(newHistoryItem, historyDiv.firstChild);
+            return newHistoryItem;
+        }
+
+        // Função de Polling (inalterada)
+        function pollJobStatus(jobId) {
+            // (Código da função pollJobStatus permanece o mesmo da versão anterior)
+            console.log(`[POLL] Iniciando polling para Job ID: ${jobId}`);
+            const historyItem = document.getElementById(`history-item-${jobId}`);
+            if (!historyItem) { console.error(`[POLL] Item histórico ${jobId} não encontrado.`); return; }
+            const intervalId = setInterval(async () => {
+                try {
+                    console.log(`[POLL] Verificando ${jobId}...`);
+                    const response = await fetch(`/check_job/${jobId}`);
+                    if (!response.ok) {
+                        console.error(`[POLL] Erro ${response.status} verificar ${jobId}. Parando.`);
+                        historyItem.innerHTML = `<div class="card-body"><div class="alert alert-danger mb-0">❌ Erro verificar status (Status: ${response.status}).</div></div>`;
+                        clearInterval(intervalId); delete activePolls[jobId]; return;
+                    }
+                    const data = await response.json();
+                    console.log(`[POLL] Status ${jobId}:`, data);
+                    if (data.status === 'finished') {
+                        console.log(`[POLL] Job ${jobId} concluído!`); clearInterval(intervalId); delete activePolls[jobId];
+                        if (data.result && data.result.success) {
+                            const result = data.result;
+                             const successHtml = `
+                                <div class="alert alert-success mb-0">✅ Download Designi concluído!</div>
+                                <div class="p-3">
+                                    <div class="mb-2"><strong>Arquivo:</strong> ${result.filename || 'N/A'}</div>
+                                    <div class="mb-2"><strong>ID:</strong> ${result.file_id}</div>
+                                    <div class="mb-0"><strong>Link:</strong><br><a href="${result.download_link}" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><i class="bi bi-download"></i> Baixar</a></div>
+                                </div>`;
+                             historyItem.innerHTML = `<div class="card-body p-0">${successHtml}</div>`;
+                        } else { historyItem.innerHTML = `<div class="card-body"><div class="alert alert-warning mb-0">⚠️ Falha: ${data.result?.error || data.error || 'Erro tarefa.'}</div></div>`; }
+                    } else if (data.status === 'failed') {
+                        console.log(`[POLL] Job ${jobId} falhou!`); clearInterval(intervalId); delete activePolls[jobId];
+                        historyItem.innerHTML = `<div class="card-body"><div class="alert alert-danger mb-0">❌ Falha crítica: ${data.error || 'Erro.'}</div></div>`;
+                    } else { console.log(`[POLL] Job ${jobId} status: ${data.status}. Continuando...`); }
+                } catch (error) {
+                    console.error(`[POLL] Erro rede polling ${jobId}:`, error);
+                    historyItem.innerHTML = `<div class="card-body"><div class="alert alert-danger mb-0">❌ Erro comunicação verificar status.</div></div>`;
+                    clearInterval(intervalId); delete activePolls[jobId];
+                }
+            }, 7000);
+            activePolls[jobId] = intervalId;
+            setTimeout(() => {
+                if (activePolls[jobId]) {
+                    console.warn(`[POLL] Timeout máximo ${jobId}. Parando.`); clearInterval(activePolls[jobId]); delete activePolls[jobId];
+                    if (historyItem.classList.contains('history-item-pending')) { historyItem.innerHTML = `<div class="card-body"><div class="alert alert-warning mb-0">⏳ Tempo limite verificação. Verifique Google Drive.</div></div>`; }
+                }
+            }, 30 * 60 * 1000);
+        }
+
+        // --- Função Download Designi Atualizada para chamar fetchAndUpdateStatus ---
         async function downloadDesigni(event) {
-             event.preventDefault(); const form = document.getElementById('designiForm'); const linkInput = document.getElementById('designi_link'); const link = linkInput.value; const submitButton = form.querySelector('button[type="submit"]');
-             // --->>> USA .trim() AQUI <<<---
-             if (!link || !isValidDesigniLink(link.trim())) { setLinkValidity('designi', false, 'Link inválido.'); return; }
-             setLinkValidity('designi', true);
-             submitButton.disabled = true; submitButton.classList.remove('is-normal'); submitButton.classList.add('is-loading');
-             try { const response = await fetch('/download-designi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: link }) });
-                 let responseData = {}; try { responseData = await response.json(); } catch (e) {}
-                 if (response.status === 429) { addHistoryItem(`<div class="alert alert-warning">✋ ${responseData.error || 'Limite atingido.'}</div>`); await fetchAndUpdateStatus(); /* finally cuida do botão*/ return; }
-                 else if (!response.ok) { addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${responseData.error || `HTTP ${response.status}`}</div>`); await fetchAndUpdateStatus(); /* finally cuida do botão*/ return; }
-                 if (responseData.success && responseData.job_id) { const initialMsgHtml = `<div class="alert alert-info history-item-pending"><span class="spinner-border spinner-border-sm animate-spin" role="status" aria-hidden="true"></span> <span class="ml-2">${responseData.message || 'Iniciado...'}</span> <span class="text-text-secondary text-xs opacity-75 ml-2">(ID: ${responseData.job_id.substring(0, 8)})</span></div>`; const newItem = addHistoryItem(initialMsgHtml, responseData.job_id); if(newItem) newItem.classList.add('history-item-pending'); linkInput.value = ''; setLinkValidity('designi', true); pollJobStatus(responseData.job_id); }
-                 else { addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${responseData.error || 'Resposta inesperada.'}</div>`); }
-                 await fetchAndUpdateStatus();
-             } catch (error) { console.error('Erro fetch /download-designi:', error); addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${error.message}</div>`); }
-             finally { submitButton.disabled = false; submitButton.classList.remove('is-loading'); submitButton.classList.add('is-normal'); }
-          }
+            event.preventDefault();
+            const form = document.getElementById('designiForm');
+            const linkInput = document.getElementById('designi_link');
+            const link = linkInput.value;
+            const normalState = form.querySelector('.normal-state');
+            const loadingState = form.querySelector('.loading');
+            const submitButton = form.querySelector('button[type="submit"]');
+            
+            // Desabilita o botão durante o processamento
+            submitButton.disabled = true;
+            normalState.style.display = 'none';
+            loadingState.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/download-designi', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: link })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success && data.job_id) {
+                    const initialMsgHtml = `<div class="alert alert-info mb-0 history-item-pending"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${data.message || 'Processo iniciado...'} <span class="text-muted small">(ID: ${data.job_id})</span></div>`;
+                    const newItem = addHistoryItem(initialMsgHtml, data.job_id);
+                    newItem.classList.add('history-item-pending');
+                    linkInput.value = '';
+                    pollJobStatus(data.job_id);
+                } else {
+                    addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro ao iniciar: ${data.error || `Erro ${response.status}.`}</div>`);
+                }
+                await fetchAndUpdateStatus();
+            } catch (error) {
+                console.error('Erro fetch /download-designi:', error);
+                addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro comunicação: ${error.message}</div>`);
+                await fetchAndUpdateStatus();
+            } finally {
+                // Reabilita o botão após o processamento
+                submitButton.disabled = false;
+                normalState.style.display = 'inline';
+                loadingState.style.display = 'none';
+            }
+        }
+
+        // --- Event Listener Formulário Freepik Atualizado para chamar fetchAndUpdateStatus ---
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-             event.preventDefault(); const form = this; const linkInput = document.getElementById('freepik_link'); const submitButton = form.querySelector('button[type="submit"]');
-             // --->>> USA .trim() AQUI <<<---
-              if (!linkInput.value || !isValidFreepikLink(linkInput.value.trim())) { setLinkValidity('freepik', false, 'Link inválido.'); return; }
-              setLinkValidity('freepik', true);
-              submitButton.disabled = true; submitButton.classList.remove('is-normal'); submitButton.classList.add('is-loading');
-             try { const response = await fetch('/upload', { method: 'POST', body: new FormData(form) }); const dataHtml = await response.text();
-                  if (response.status === 429 || !response.ok) { addHistoryItem(dataHtml || `<div class="alert alert-danger">❌ Erro ${response.status}.</div>`); await fetchAndUpdateStatus(); /* finally cuida do botão */ return; }
-                  else { addHistoryItem(dataHtml); if (dataHtml.includes('alert-success') || dataHtml.includes('Upload concluído')) { linkInput.value = ''; setLinkValidity('freepik', true);} await fetchAndUpdateStatus(); }
-             } catch (error) { console.error('Erro fetch /upload:', error); addHistoryItem(`<div class="alert alert-danger">❌ Erro: ${error.message}</div>`); }
-             finally { submitButton.disabled = false; submitButton.classList.remove('is-loading'); submitButton.classList.add('is-normal'); }
-         });
+            event.preventDefault();
+            const form = this;
+            const normalState = form.querySelector('.normal-state');
+            const loadingState = form.querySelector('.loading');
+            const linkInput = document.getElementById('freepik_link');
+            const submitButton = form.querySelector('button[type="submit"]');
+            
+            // Desabilita o botão durante o processamento
+            submitButton.disabled = true;
+            normalState.style.display = 'none';
+            loadingState.style.display = 'inline-block';
 
-        // --- Validação de Link no Cliente ---
-        // Função isValidFreepikLink atualizada
-        function isValidFreepikLink(url) {
-            if (!url) return false;
-            const freepikRegex = /^https?:\/\/(?:www\.)?freepik\.(?:com|es)\/(?:[^\/]+)\/[^_\/]+_(\d+)\.(?:htm|jpg|html)/i;
-            return freepikRegex.test(url);
-        }
-        function isValidDesigniLink(url) { if (!url) return false; return url.startsWith('https://www.designi.com.br/'); } // Adicionado check !url
-        function setLinkValidity(type, isValid, message = '') {
-            const input = document.getElementById(`${type}_link`); const feedback = document.getElementById(`${type}_link_feedback`); const button = document.getElementById(`${type}SubmitBtn`);
-            if (!input || !feedback || !button) return;
-            const isInputEmpty = input.value.trim() === '';
-            if (isValid || isInputEmpty) { input.classList.remove('invalid-link'); feedback.textContent = ''; feedback.classList.remove('invalid'); button.disabled = isInputEmpty; }
-            else { input.classList.add('invalid-link'); feedback.textContent = message; feedback.classList.add('invalid'); button.disabled = true; }
-        }
-        // Event listeners atualizados com .trim()
-        document.getElementById('freepik_link').addEventListener('input', (e) => { setLinkValidity('freepik', isValidFreepikLink(e.target.value.trim()), 'Link Freepik parece inválido.'); });
-        document.getElementById('designi_link').addEventListener('input', (e) => { setLinkValidity('designi', isValidDesigniLink(e.target.value.trim()), 'Link Designi deve começar com https://www.designi.com.br/'); });
-
-
-        // --- Event Listeners e Inicialização ---
-        document.addEventListener('DOMContentLoaded', () => {
-             fetchAndUpdateStatus(); renderHistory();
-             const clearBtn = document.getElementById('clearHistoryBtn'); if (clearBtn) { clearBtn.addEventListener('click', clearHistory); }
-             // Validação inicial com .trim()
-             const fInput = document.getElementById('freepik_link'); const dInput = document.getElementById('designi_link');
-             setLinkValidity('freepik', isValidFreepikLink(fInput.value.trim()), 'Link Freepik parece inválido.');
-             setLinkValidity('designi', isValidDesigniLink(dInput.value.trim()), 'Link Designi deve começar com https://www.designi.com.br/');
-             // Garante estado inicial correto dos botões
-             document.querySelectorAll('.submit-button').forEach(button => {
-                 const form = button.closest('form'); const input = form ? form.querySelector('input[required]') : null;
-                 button.disabled = input ? input.value.trim() === '' : true; // Começa desabilitado se input vazio
-                 button.classList.add('is-normal'); button.classList.remove('is-loading');
-             });
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: new FormData(form) });
+                const dataHtml = await response.text();
+                if (!response.ok) {
+                    addHistoryItem(dataHtml || `<div class="alert alert-danger mb-0">❌ Erro ${response.status}.</div>`);
+                } else {
+                    addHistoryItem(dataHtml);
+                    linkInput.value = '';
+                }
+                await fetchAndUpdateStatus();
+            } catch (error) {
+                console.error('Erro fetch /upload:', error);
+                addHistoryItem(`<div class="alert alert-danger mb-0">❌ Erro comunicação: ${error.message}</div>`);
+                await fetchAndUpdateStatus();
+            } finally {
+                // Reabilita o botão após o processamento
+                submitButton.disabled = false;
+                normalState.style.display = 'inline';
+                loadingState.style.display = 'none';
+            }
         });
 
+         // --- REINTRODUZIDO: Carregamento inicial do status ---
+         window.addEventListener('DOMContentLoaded', fetchAndUpdateStatus);
+
     </script>
-    </body>
+</body>
 </html>
