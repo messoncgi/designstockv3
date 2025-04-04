@@ -5,6 +5,7 @@ import json
 import base64
 import requests
 import re
+import sys
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError, Error as PlaywrightError
@@ -15,17 +16,14 @@ from googleapiclient.errors import HttpError
 import mimetypes
 import traceback
 
-# --- FUNÇÃO HELPER PARA UPLOAD DE SCREENSHOT ---
-# ... (Função upload_debug_screenshot igual à versão anterior) ...
-def upload_debug_screenshot(page, filename_prefix, drive_service, base_folder_id, temp_dir):
-    # Adicionada verificação inicial de base_folder_id
-    if not drive_service or not page or page.is_closed() or not base_folder_id:
-        print(f"[TASK DEBUG] Screenshot '{filename_prefix}' não pode ser tirado (Drive/Page/BaseFolderID indisponível ou pág fechada).")
-        return
+# Adicionar o diretório pai ao path para importar app.py
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# --- FUNÇÃO HELPER PARA UPLOAD DE SCREENSHOT ---
+def upload_debug_screenshot(page, filename_prefix, drive_service, base_folder_id, temp_dir):
+    if not drive_service or not page or page.is_closed() or not base_folder_id: print(f"[TASK DEBUG] Screenshot '{filename_prefix}' não pode ser tirado."); return
     debug_folder_name = "printsdebug"; debug_folder_id = None
     try:
-        # ... (Restante da lógica de encontrar/criar pasta igual) ...
         query = f"'{base_folder_id}' in parents and name='{debug_folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
         response = drive_service.files().list(q=query, spaces='drive', fields='files(id, name)').execute(); folders = response.get('files', [])
         if folders: debug_folder_id = folders[0].get('id')
@@ -34,7 +32,6 @@ def upload_debug_screenshot(page, filename_prefix, drive_service, base_folder_id
             folder = drive_service.files().create(body=folder_metadata, fields='id').execute(); debug_folder_id = folder.get('id'); print(f"[TASK DEBUG] Pasta '{debug_folder_name}' criada com ID: {debug_folder_id}")
         if not debug_folder_id: print("[TASK ERROR] Não foi possível obter/criar ID da pasta de debug."); return
 
-        # ... (Lógica de tirar screenshot e fazer upload igual) ...
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S"); safe_prefix = re.sub(r'[\\/*?:"<>|]', "_", filename_prefix).strip()
         screenshot_filename = f"{safe_prefix}_{timestamp}.png"; local_screenshot_path = os.path.join(temp_dir, screenshot_filename)
         print(f"[TASK DEBUG] Tirando screenshot: {local_screenshot_path}")
@@ -53,9 +50,7 @@ def upload_debug_screenshot(page, filename_prefix, drive_service, base_folder_id
     except HttpError as drive_error: print(f"[TASK ERROR] Erro API GDrive (debug screenshot): {drive_error}")
     except Exception as e: print(f"[TASK ERROR] Erro inesperado em upload_debug_screenshot: {e}"); traceback.print_exc()
 
-
 # --- Funções Auxiliares (get_drive_service_from_credentials, solve_captcha) ---
-# ... (iguais) ...
 def get_drive_service_from_credentials(credentials_base64_str):
     SCOPES = ['https://www.googleapis.com/auth/drive']
     try:
@@ -98,7 +93,6 @@ def solve_captcha(page, captcha_api_key, url_login):
     return False
 
 # --- Função de Verificação de Login via /conta ---
-# ... (igual) ...
 def check_login_via_account_page(page, base_url="https://www.designi.com.br/"):
     print("[TASK DEBUG] --- Verificando login via /conta ---")
     account_url = urljoin(base_url, "/conta"); login_url_part = "/login"
@@ -114,27 +108,54 @@ def check_login_via_account_page(page, base_url="https://www.designi.com.br/"):
 
 # --- Tarefa Principal RQ ---
 def perform_designi_download_task(
-    designi_url, client_ip, folder_id, email, senha, captcha_api_key,
-    drive_credentials_base64, url_login='https://designi.com.br/login',
+    designi_url,
+    client_ip,
+    folder_id,
+    email,
+    senha,
+    captcha_api_key,
+    drive_credentials_base64,
+    url_login='https://designi.com.br/login',
     saved_cookies=None
-    ):
+):
+    """
+    Tarefa RQ para baixar arquivo do Designi, com login, CAPTCHA, screenshots e upload para GDrive.
+    """
     print(f"[TASK LOG] =======================================================")
     print(f"[TASK LOG] Iniciando tarefa URL: {designi_url} (IP: {client_ip})")
-    # --- CORREÇÃO LINHA 178 ---
-    # Adicionar verificação se folder_id foi passado corretamente antes de usar
+    
+    # Verificação de parâmetros obrigatórios
+    if not designi_url or not designi_url.startswith('http'):
+        return {'success': False, 'error': 'URL Designi inválida ou não fornecida.', 'duration_seconds': 0}
+    
     if folder_id:
-        print(f"[TASK LOG] Pasta Base GDrive: {folder_id}") # Esta era a linha 178 original
+        print(f"[TASK LOG] Pasta Base GDrive: {folder_id}")
     else:
         print("[TASK WARNING] Pasta Base GDrive (folder_id) NÃO fornecida ou vazia!")
-        # Decide se quer continuar sem folder_id (talvez salvando na raiz?) ou falhar
-        # Por segurança, vamos falhar se a pasta base não for fornecida.
         return {'success': False, 'error': 'ID da Pasta Base do Google Drive não fornecido.', 'duration_seconds': 0}
+    
+    # Verificação de credenciais
+    if not email or not senha:
+        return {'success': False, 'error': 'Credenciais Designi não fornecidas.', 'duration_seconds': 0}
+    
+    if not drive_credentials_base64:
+        return {'success': False, 'error': 'Credenciais Google Drive não fornecidas.', 'duration_seconds': 0}
+    
     print(f"[TASK LOG] =======================================================")
-    # --- FIM CORREÇÃO ---
-    temp_file_path = None; browser = None; context = None; page = None
-    drive_service = None; start_time = time.time()
-    temp_dir = '/tmp/designi_downloads'; os.makedirs(temp_dir, exist_ok=True)
+    
+    # O restante da função continua aqui...
+    temp_file_path = None
+    browser = None
+    context = None
+    page = None
+    drive_service = None
+    start_time = time.time()
+    temp_dir = '/tmp/designi_downloads'
+    os.makedirs(temp_dir, exist_ok=True)
     print(f"[TASK LOG] Usando temp dir: {temp_dir}")
+    
+    # Inicializar file_size para evitar referência antes da definição
+    file_size = 0
 
     try: print("[TASK LOG] Obtendo GDrive..."); drive_service = get_drive_service_from_credentials(drive_credentials_base64); assert drive_service; print("[TASK LOG] GDrive OK.")
     except Exception as drive_init_err: return {'success': False, 'error': f"Erro GDrive: {drive_init_err}", 'duration_seconds': time.time() - start_time}
@@ -165,7 +186,8 @@ def perform_designi_download_task(
                      upload_debug_screenshot(page, "ErroVerificacaoCookieConta", drive_service, folder_id, temp_dir)
                      try:
                          context.clear_cookies()
-                     except:
+                     except Exception as clear_err:
+                         print(f"[TASK WARNING] Erro ao limpar cookies: {clear_err}")
                          pass
             else: print("[TASK LOG] Sem cookies salvos.")
 
@@ -180,7 +202,12 @@ def perform_designi_download_task(
                     upload_debug_screenshot(page, "AntesClickLoginManual", drive_service, folder_id, temp_dir); print("[TASK LOG] Clicando login..."); login_button_selector = 'button[type="submit"]:has-text("login"), button:has-text("Entrar")'; page.locator(login_button_selector).first.click(timeout=30000); print("[TASK DEBUG] Click OK. Verificando /conta..."); page.wait_for_timeout(5000)
                     if check_login_via_account_page(page):
                         print("[TASK LOG] SUCESSO: Login manual OK."); login_bem_sucedido = True; upload_debug_screenshot(page, "SucessoLoginManualConta", drive_service, folder_id, temp_dir)
-                        try: cookies = context.cookies(); from app import save_designi_cookies; save_designi_cookies(cookies, client_ip); print("[TASK LOG] Cookies salvos.")
+                        try: 
+                            cookies = context.cookies()
+                            # Usar a função importada no início do arquivo
+                            from app import save_designi_cookies
+                            save_designi_cookies(cookies, client_ip)
+                            print("[TASK LOG] Cookies salvos.")
                         except Exception as save_err: print(f"[TASK WARNING] Erro salvar cookies: {save_err}")
                     else: print("[TASK ERROR] FALHA: Verificação /conta FALHOU pós-login."); upload_debug_screenshot(page, "FalhaLoginManualConta", drive_service, folder_id, temp_dir); raise Exception("Verificação /conta falhou pós-login manual.")
                 except Exception as login_manual_err: print(f"[TASK ERROR] Erro login manual: {login_manual_err}"); upload_debug_screenshot(page, "ErroProcessoLoginManual", drive_service, folder_id, temp_dir); raise login_manual_err
@@ -195,11 +222,11 @@ def perform_designi_download_task(
             print(f"[TASK LOG] Procurando botão: '{download_button_selector}'...")
             download_button = page.locator(download_button_selector)
             try:
-                print("[TASK DEBUG] Screenshot ANTES espera (V4)..."); upload_debug_screenshot(page, "AntesEsperarBotaoDownV4", drive_service, folder_id, temp_dir)
+                print("[TASK DEBUG] Screenshot ANTES espera botão (V4)..."); upload_debug_screenshot(page, "AntesEsperarBotaoDownV4", drive_service, folder_id, temp_dir)
                 print(f"[TASK DEBUG] 1. Rolando para '{download_button_selector}'..."); download_button.scroll_into_view_if_needed(timeout=10000)
                 print("[TASK DEBUG] 2. Esperando VISÍVEL (60s)..."); download_button.wait_for(state="visible", timeout=60000)
                 print("[TASK DEBUG] 3. Esperando HABILITADO (15s)..."); download_button.wait_for(state="enabled", timeout=15000)
-                print(f"[TASK LOG] Botão '{download_button_selector}' OK!"); download_button_to_click = download_button # Usar a variável localizada
+                print(f"[TASK LOG] Botão '{download_button_selector}' OK!"); download_button_to_click = download_button
             except Exception as btn_err:
                 print(f"[TASK ERROR] Timeout/Erro esperar '{download_button_selector}': {btn_err}")
                 print("[TASK DEBUG] Screenshot FALHA botão (V4)..."); upload_debug_screenshot(page, "FalhaEncontrarBotaoDownV4", drive_service, folder_id, temp_dir)
@@ -208,7 +235,6 @@ def perform_designi_download_task(
                 raise Exception(f"Botão '{download_button_selector}' não encontrado/visível/habilitado.")
 
             # --- Clique e Espera Download ---
-            # ... (igual) ...
             print("[TASK LOG] Configurando espera 'download' (300s)...")
             popup_detected = None
             def handle_popup(popup): nonlocal popup_detected; print(f"[TASK DEBUG] POPUP: {popup.url}"); popup_detected = popup
@@ -223,7 +249,6 @@ def perform_designi_download_task(
             except Exception as click_download_err: print(f"[TASK ERROR] Erro clique/espera download: {click_download_err}"); upload_debug_screenshot(page, "ErroClickOuEsperaDownloadV4", drive_service, folder_id, temp_dir); raise click_download_err
 
             # --- Salvar arquivo ---
-            # ... (lógica igual) ...
             if not download: raise Exception("Objeto download não obtido.")
             suggested_filename = download.suggested_filename
             if not suggested_filename: parsed_url_dl = urlparse(download.url); _, ext = os.path.splitext(parsed_url_dl.path); suggested_filename = f"designi_download_{int(time.time())}{ext if ext else '.file'}"; print(f"[TASK WARNING] Sem nome. Usando: {suggested_filename}")
@@ -238,11 +263,10 @@ def perform_designi_download_task(
 
     # --- Fim Bloco Playwright ---
     except Exception as e:
-        # ... (Tratamento de erro geral igual) ...
         end_time = time.time(); duration = end_time - start_time; error_message = f"Erro automação: {e}"
         print(f"[TASK FAILED] {error_message} (Duração: {duration:.2f}s)")
         print(f"--- TRACEBACK ---"); traceback.print_exc(); print(f"--- TRACEBACK FIM ---")
-        if page and not page.is_closed(): print("[TASK DEBUG] Screenshot final erro..."); upload_debug_screenshot(page, "ErroGeralFinalV5", drive_service, folder_id, temp_dir) # V5 no nome
+        if page and not page.is_closed(): print("[TASK DEBUG] Screenshot final erro..."); upload_debug_screenshot(page, "ErroGeralFinalV5", drive_service, folder_id, temp_dir)
         if temp_file_path and os.path.exists(temp_file_path):
             try:
                 os.remove(temp_file_path)
@@ -250,14 +274,12 @@ def perform_designi_download_task(
                 pass
         return {'success': False, 'error': error_message, 'duration_seconds': duration}
     finally:
-        # ... (Fechamento do browser igual) ...
         print("[TASK DEBUG] Bloco Finally principal.")
         if browser and browser.is_connected():
             try: print("[TASK LOG] Fechando navegador (finally)..."); browser.close(); print("[TASK LOG] Navegador fechado (finally).")
             except Exception as close_final_err: print(f"[TASK WARNING] Erro fechar navegador (finally): {close_final_err}")
 
     # --- Upload Google Drive ---
-    # ... (lógica igual) ...
     print("[TASK LOG] --- Iniciando UPLOAD GDrive ---")
     result = {'success': False, 'error': 'Upload não iniciado', 'duration_seconds': time.time() - start_time}
     if temp_file_path and os.path.exists(temp_file_path) and file_size > 0:
