@@ -341,32 +341,164 @@ def perform_designi_download_task(
             upload_debug_screenshot(page, "PaginaArquivoFinalCarregada", drive_service, folder_id, temp_dir)
 
             # --- FOCO #downButton + ESPERA ROBUSTA ---
-            download_button_selector = "#downButton"
-            print(f"[TASK LOG] Procurando botão: '{download_button_selector}'...")
-            download_button = page.locator(download_button_selector)
-            try:
-                print("[TASK DEBUG] Screenshot ANTES espera botão (V4)...")
-                upload_debug_screenshot(page, "AntesEsperarBotaoDownV4", drive_service, folder_id, temp_dir)
-
-                # Wait for the button using a combination of checks
-                await page.wait_for_function(f"""
-                    () => {{
-                        const btn = document.querySelector('{download_button_selector}');
-                        return btn && btn.offsetParent !== null && !btn.disabled;
-                    }}
-                """, timeout=90000)
-
-                print(f"[TASK LOG] Botão '{download_button_selector}' OK!")
-                download_button_to_click = download_button
-            except Exception as btn_err:
-                print(f"[TASK ERROR] Timeout/Erro esperar '{download_button_selector}': {btn_err}")
-                print("[TASK DEBUG] Screenshot FALHA botão (V4)...")
-                upload_debug_screenshot(page, "FalhaEncontrarBotaoDownV4", drive_service, folder_id, temp_dir)
+            print("[TASK LOG] Iniciando detecção avançada do botão de download...")
+            upload_debug_screenshot(page, "AntesDeteccaoBotaoDownload", drive_service, folder_id, temp_dir)
+            
+            # Lista de seletores para tentar, em ordem de prioridade
+            download_button_selectors = [
+                "#downButton",                                      # Seletor original
+                "button:has-text('Download')",                      # Botão com texto Download
+                "a:has-text('Download')",                           # Link com texto Download
+                "button:has-text('Baixar')",                        # Botão com texto Baixar em português
+                "a:has-text('Baixar')",                             # Link com texto Baixar
+                "button.download-button, a.download-button",        # Classes comuns de botão de download
+                "[id*='download'], [class*='download']",            # Elementos com 'download' no id ou classe
+                "[id*='baixar'], [class*='baixar']",                # Elementos com 'baixar' no id ou classe
+                "button:has([class*='download']), a:has([class*='download'])"  # Botões/links com filhos que têm 'download' na classe
+            ]
+            
+            # Sistema de pontuação para avaliar candidatos a botão
+            def score_download_button(element):
+                try:
+                    score = 0
+                    # Verifica texto
+                    text = element.inner_text().lower()
+                    if "download" in text: score += 10
+                    if "baixar" in text: score += 10
+                    if "iniciar" in text and ("download" in text or "baixar" in text): score += 5
+                    
+                    # Verifica atributos
+                    tag_name = element.evaluate("el => el.tagName").lower()
+                    if tag_name in ["button", "a"]: score += 5
+                    
+                    # Verifica classes e IDs
+                    classes = element.evaluate("el => Array.from(el.classList).join(' ')").lower()
+                    element_id = element.evaluate("el => el.id").lower()
+                    
+                    if "download" in classes or "baixar" in classes: score += 8
+                    if "download" in element_id or "baixar" in element_id: score += 8
+                    if "btn" in classes or "button" in classes: score += 3
+                    
+                    # Verifica visibilidade e tamanho
+                    is_visible = element.is_visible()
+                    if is_visible: score += 15
+                    
+                    # Verifica se está habilitado
+                    is_disabled = element.evaluate("el => el.disabled") == True
+                    if not is_disabled: score += 10
+                    
+                    # Verifica posição na página (botões de download geralmente estão mais abaixo)
+                    position = element.evaluate("el => { const rect = el.getBoundingClientRect(); return { top: rect.top, left: rect.left }; }")
+                    if position["top"] > 300: score += 2  # Dá uma pequena vantagem a elementos mais abaixo na página
+                    
+                    print(f"[TASK DEBUG] Elemento {tag_name} '{text}' - Score: {score} (Visível: {is_visible}, Desabilitado: {is_disabled})")
+                    return score
+                except Exception as e:
+                    print(f"[TASK WARNING] Erro ao calcular score: {e}")
+                    return 0
+            
+            # Função para tentar diferentes métodos de clique
+            async def try_click_methods(element, max_attempts=3):
+                methods = [
+                    lambda: element.click(timeout=10000, force=False),  # Clique normal
+                    lambda: element.click(timeout=10000, force=True),   # Clique forçado
+                    lambda: page.evaluate("(el) => el.click()", element)  # Clique via JavaScript
+                ]
+                
+                for i, method in enumerate(methods[:max_attempts]):
+                    try:
+                        print(f"[TASK DEBUG] Tentativa de clique #{i+1}...")
+                        method()
+                        print(f"[TASK DEBUG] Método de clique #{i+1} bem-sucedido!")
+                        return True
+                    except Exception as e:
+                        print(f"[TASK WARNING] Falha no método de clique #{i+1}: {e}")
+                        page.wait_for_timeout(1000)  # Espera 1s entre tentativas
+                
+                return False
+            
+            # Busca e avaliação de candidatos
+            download_button_to_click = None
+            best_score = -1
+            candidates = []
+            
+            # Tenta cada seletor e coleta candidatos
+            for selector in download_button_selectors:
+                try:
+                    print(f"[TASK DEBUG] Tentando seletor: '{selector}'")
+                    elements = page.locator(selector).all()
+                    for element in elements:
+                        candidates.append(element)
+                except Exception as e:
+                    print(f"[TASK WARNING] Erro ao buscar seletor '{selector}': {e}")
+            
+            print(f"[TASK DEBUG] Total de candidatos encontrados: {len(candidates)}")
+            
+            # Avalia cada candidato
+            for candidate in candidates:
+                score = score_download_button(candidate)
+                if score > best_score:
+                    best_score = score
+                    download_button_to_click = candidate
+            
+            # Último recurso: busca qualquer elemento clicável com palavras-chave de download
+            if not download_button_to_click or best_score < 10:
+                print("[TASK DEBUG] Usando estratégia de último recurso...")
+                try:
+                    # Busca qualquer elemento com texto relacionado a download
+                    page.evaluate("""
+                    () => {
+                        const allElements = document.querySelectorAll('*');
+                        for (const el of allElements) {
+                            const text = el.innerText && el.innerText.toLowerCase() || '';
+                            if ((text.includes('download') || text.includes('baixar')) && 
+                                el.offsetParent !== null && 
+                                !el.disabled) {
+                                el.setAttribute('data-download-candidate', 'true');
+                            }
+                        }
+                    }
+                    """)
+                    
+                    last_resort_elements = page.locator("[data-download-candidate='true']").all()
+                    print(f"[TASK DEBUG] Elementos de último recurso encontrados: {len(last_resort_elements)}")
+                    
+                    for element in last_resort_elements:
+                        score = score_download_button(element)
+                        if score > best_score:
+                            best_score = score
+                            download_button_to_click = element
+                except Exception as e:
+                    print(f"[TASK WARNING] Erro na estratégia de último recurso: {e}")
+            
+            # Verifica se encontrou um botão adequado
+            if not download_button_to_click:
+                print("[TASK ERROR] Nenhum botão de download adequado encontrado!")
+                upload_debug_screenshot(page, "FalhaNenhumBotaoEncontrado", drive_service, folder_id, temp_dir)
                 try:
                     print(f"[TASK DEBUG] HTML body:\n---\n{page.locator('body').inner_html(timeout=2000)[:3000]}...\n---")
                 except Exception as html_err:
                     print(f"[TASK DEBUG] Erro log HTML: {html_err}")
-                raise Exception(f"Botão '{download_button_selector}' não encontrado/visível/habilitado.")
+                raise Exception("Nenhum botão de download adequado encontrado após múltiplas estratégias.")
+            
+            print(f"[TASK LOG] Botão de download encontrado com score {best_score}!")
+            upload_debug_screenshot(page, "BotaoDownloadEncontrado", drive_service, folder_id, temp_dir)
+            
+            # Rola para o botão e espera que esteja visível
+            try:
+                print("[TASK DEBUG] Rolando para o botão...")
+                download_button_to_click.scroll_into_view_if_needed(timeout=10000)
+                page.wait_for_timeout(1000)  # Pequena pausa após rolagem
+                
+                # Destaca visualmente o botão para debug
+                page.evaluate("""(el) => {
+                    const originalStyle = el.getAttribute('style') || '';
+                    el.setAttribute('style', originalStyle + '; border: 3px solid red !important; background-color: yellow !important;');
+                }""", download_button_to_click)
+                
+                upload_debug_screenshot(page, "BotaoDownloadDestacado", drive_service, folder_id, temp_dir)
+            except Exception as scroll_err:
+                print(f"[TASK WARNING] Erro ao rolar para o botão: {scroll_err}")
 
             # --- Clique e Espera Download ---
             print("[TASK LOG] Configurando espera 'download' (300s)...")
@@ -376,13 +508,23 @@ def perform_designi_download_task(
                 nonlocal popup_detected
                 print(f"[TASK DEBUG] POPUP: {popup.url}")
                 popup_detected = popup
+                # Opcionalmente, fechar popups indesejados
+                if "ad" in popup.url.lower() or "banner" in popup.url.lower():
+                    print(f"[TASK DEBUG] Fechando popup de anúncio: {popup.url}")
+                    popup.close()
 
             page.on("popup", handle_popup)
             try:
                 with page.expect_download(timeout=300000) as download_info:
-                    print(f"[TASK LOG] ---> CLICANDO '{download_button_selector}' <---")
+                    print(f"[TASK LOG] ---> CLICANDO NO BOTÃO DE DOWNLOAD <---")
                     page.wait_for_timeout(500)
-                    download_button_to_click.click()
+                    
+                    # Tenta diferentes métodos de clique
+                    click_success = await try_click_methods(download_button_to_click)
+                    
+                    if not click_success:
+                        raise Exception("Todos os métodos de clique falharam")
+                    
                     print("[TASK LOG] Click OK. Aguardando download...")
                 download = download_info.value
                 print(f"[TASK LOG] Download OK! Nome: {download.suggested_filename}")
