@@ -398,7 +398,7 @@ def perform_designi_download_task(
                     return 0
             
             # Função para tentar diferentes métodos de clique
-            async def try_click_methods(element, max_attempts=3):
+            def try_click_methods(element, max_attempts=3):
                 methods = [
                     lambda: element.click(timeout=10000, force=False),  # Clique normal
                     lambda: element.click(timeout=10000, force=True),   # Clique forçado
@@ -519,8 +519,8 @@ def perform_designi_download_task(
                     print(f"[TASK LOG] ---> CLICANDO NO BOTÃO DE DOWNLOAD <---")
                     page.wait_for_timeout(500)
                     
-                    # Tenta diferentes métodos de clique
-                    click_success = await try_click_methods(download_button_to_click)
+                    # Tenta diferentes métodos de clique (sem await)
+                    click_success = try_click_methods(download_button_to_click)
                     
                     if not click_success:
                         raise Exception("Todos os métodos de clique falharam")
