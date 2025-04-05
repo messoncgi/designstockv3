@@ -484,13 +484,29 @@
                 return; 
             }
             
+            // Contador de tentativas para cada job
+            let retryCount = 0;
+            const maxRetries = 3;
+            
             const intervalId = setInterval(async () => {
                 try {
                     console.log(`[POLL] Verificando ${jobId}...`);
                     const response = await fetch(`/check_job/${jobId}`);
                     
+                    // Resetar contador de tentativas após sucesso
+                    retryCount = 0;
+                    
                     if (!response.ok) {
-                        console.error(`[POLL] Erro ${response.status} verificar ${jobId}. Parando.`);
+                        console.error(`[POLL] Erro ${response.status} verificar ${jobId}.`);
+                        
+                        // Tentar novamente se não excedeu o limite de tentativas
+                        if (retryCount < maxRetries) {
+                            retryCount++;
+                            console.log(`[POLL] Tentativa ${retryCount}/${maxRetries} para ${jobId}`);
+                            return; // Continua o intervalo para tentar novamente
+                        }
+                        
+                        console.error(`[POLL] Máximo de tentativas excedido para ${jobId}. Parando.`);
                         historyItem.innerHTML = `
                             <div class="alert alert-danger">
                                 <div class="flex items-start">
