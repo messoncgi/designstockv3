@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- Configurações Globais e Tema --- */
+        /* --- Configurações Globais e Tema (Inalterado) --- */
         :root {
             --cor-primaria: #FFA500; /* Laranja */
             --cor-primaria-hover: #FF8C00; /* Laranja Escuro */
@@ -30,27 +30,35 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif; /* Fonte moderna */
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, var(--cor-fundo-gradiente-inicio), var(--cor-fundo-gradiente-fim));
-            background-attachment: fixed; /* Mantém o gradiente fixo */
+            background-attachment: fixed;
             color: var(--cor-texto);
-            padding-top: 3rem; /* Espaço no topo após remover navbar */
+            padding-top: 3rem;
             padding-bottom: 3rem;
+            display: flex; /* Ajuda a manter o footer embaixo */
+            flex-direction: column; /* Empilha conteúdo e footer */
+            min-height: 100vh; /* Garante que o body ocupe a tela toda */
         }
 
-        /* --- Card Principal com Efeito Vidro --- */
+        .container {
+            flex-grow: 1; /* Faz o container crescer para empurrar o footer */
+        }
+
+
+        /* --- Card Principal com Efeito Vidro (Inalterado) --- */
         .main-card {
             background-color: var(--cor-card-fundo);
             border: 1px solid var(--cor-card-borda);
-            border-radius: 15px; /* Bordas mais arredondadas */
+            border-radius: 15px;
             padding: 2rem;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            backdrop-filter: blur(10px); /* Efeito vidro */
-            -webkit-backdrop-filter: blur(10px); /* Suporte Safari */
-            margin-bottom: 2rem; /* Espaço antes do footer */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
         }
 
-        /* --- Título --- */
+        /* --- Título (Inalterado) --- */
         .main-title {
             color: var(--cor-primaria);
             text-align: center;
@@ -58,12 +66,11 @@
             font-weight: 700;
         }
 
-        /* --- Abas (Tabs) --- */
+        /* --- Abas (Tabs) (Inalterado) --- */
         .nav-tabs {
             border-bottom: 1px solid var(--cor-card-borda);
             margin-bottom: 1.5rem;
         }
-
         .nav-tabs .nav-link {
             color: var(--cor-texto-secundario);
             background-color: transparent;
@@ -71,15 +78,13 @@
             border-bottom: 3px solid transparent;
             margin-right: 5px;
             padding: 0.8rem 1rem;
-            transition: all 0.3s ease; /* Transição suave */
+            transition: all 0.3s ease;
             font-weight: 500;
         }
-
         .nav-tabs .nav-link:hover {
             color: var(--cor-texto);
-            border-bottom-color: rgba(255, 165, 0, 0.5); /* Laranja suave no hover */
+            border-bottom-color: rgba(255, 165, 0, 0.5);
         }
-
         .nav-tabs .nav-link.active {
             color: var(--cor-primaria);
             background-color: transparent;
@@ -87,213 +92,216 @@
             font-weight: 700;
         }
 
-        /* --- Área de Upload Refinada --- */
+        /* --- Área de Upload Refinada (Inalterado) --- */
         .upload-area {
-            border: 1px solid var(--cor-card-borda); /* Borda sólida sutil */
+            border: 1px solid var(--cor-card-borda);
             border-radius: 10px;
             padding: 2rem;
             text-align: center;
             margin: 20px 0;
-            background-color: rgba(0, 0, 0, 0.1); /* Fundo levemente diferente */
+            background-color: rgba(0, 0, 0, 0.1);
             transition: background-color 0.3s ease;
         }
-
         .upload-area:hover {
             background-color: rgba(0, 0, 0, 0.2);
         }
-
         .form-label {
             color: var(--cor-texto-secundario);
             margin-bottom: 0.5rem;
-            display: block; /* Garante que o label fique acima */
+            display: block;
         }
-
         .form-control {
-            background-color: rgba(255, 255, 255, 0.1); /* Fundo do input */
+            background-color: rgba(255, 255, 255, 0.1);
             border: 1px solid var(--cor-card-borda);
             color: var(--cor-texto);
             border-radius: 8px;
             padding: 0.75rem 1rem;
         }
-
         .form-control::placeholder {
             color: var(--cor-texto-secundario);
             opacity: 0.7;
         }
-
         .form-control:focus {
             background-color: rgba(255, 255, 255, 0.15);
             border-color: var(--cor-primaria);
-            box-shadow: 0 0 0 0.25rem rgba(255, 165, 0, 0.25); /* Focus laranja */
+            box-shadow: 0 0 0 0.25rem rgba(255, 165, 0, 0.25);
             color: var(--cor-texto);
         }
 
-        /* --- Botões com Efeito Glow --- */
+        /* --- Botões com Efeito Glow (Inalterado) --- */
         .btn-primary {
             background-color: var(--cor-primaria);
             border-color: var(--cor-primaria);
-            color: var(--cor-fundo); /* Texto escuro no botão laranja */
+            color: var(--cor-fundo);
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.3s ease;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3); /* Sombra base */
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
         }
-
-        .btn-primary:hover,
-        .btn-primary:focus {
+        /* Estilo para botão desabilitado */
+        .btn-primary:disabled {
+            background-color: #6c757d; /* Cinza Bootstrap */
+            border-color: #6c757d;
+            color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none; /* Remove glow quando desabilitado */
+            opacity: 0.65;
+        }
+        .btn-primary:hover:not(:disabled), /* Aplica hover/focus apenas se não estiver desabilitado */
+        .btn-primary:focus:not(:disabled) {
             background-color: var(--cor-primaria-hover);
             border-color: var(--cor-primaria-hover);
             color: var(--cor-fundo);
-            /* Efeito Glow */
             box-shadow: 0 0 15px 5px var(--glow-cor);
         }
 
-        .btn-primary .loading { display: none; } /* Mantido do original */
-        .btn-primary:disabled .loading { display: inline-block; } /* Mostrar loading quando desabilitado */
-        .btn-primary:disabled .normal-state { display: none; } /* Esconder texto normal quando desabilitado */
+        .btn-primary .loading { display: none; }
+        .btn-primary:disabled .loading { display: inline-block; }
+        .btn-primary:disabled .normal-state { display: none; }
 
         .btn-primary .spinner-border {
-            color: var(--cor-fundo); /* Cor do spinner */
+            color: var(--cor-fundo);
+        }
+        /* Cor do spinner no botão desabilitado */
+        .btn-primary:disabled .spinner-border {
+             color: #ccc;
         }
 
-        /* --- Seção Tutorial Mais Visual --- */
+
+        /* --- Seção Tutorial Mais Visual (Inalterado) --- */
         .tutorial-section {
             margin-top: 30px;
             padding: 20px;
-            background-color: rgba(0, 0, 0, 0.1); /* Fundo sutil */
+            background-color: rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             border-left: 4px solid var(--cor-primaria);
         }
-
         .tutorial-section h6 {
             color: var(--cor-primaria);
             margin-bottom: 15px;
             font-weight: 700;
         }
-        .tutorial-section h6 i {
-             margin-right: 8px;
-        }
-
+        .tutorial-section h6 i { margin-right: 8px; }
         .tutorial-step {
             margin-bottom: 10px;
             padding-left: 10px;
             color: var(--cor-texto-secundario);
-            display: flex; /* Para alinhar ícone e texto */
+            display: flex;
             align-items: center;
         }
         .tutorial-step i {
-            margin-right: 10px; /* Espaço entre ícone e texto */
-            color: var(--cor-primaria); /* Ícones laranja */
+            margin-right: 10px;
+            color: var(--cor-primaria);
             font-size: 1.1rem;
-            min-width: 20px; /* Garante alinhamento */
+            min-width: 20px;
             text-align: center;
         }
 
-        /* --- Histórico com Distinção Visual --- */
+        /* --- Histórico com Distinção Visual (Inalterado) --- */
          #uploadHistory h6 {
             color: var(--cor-texto-secundario);
             text-align: center;
             margin-bottom: 1.5rem;
             font-weight: 500;
         }
-
         #historyItems .card {
             background-color: rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil */
-            border-left-width: 4px; /* Borda esquerda mais grossa para status */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left-width: 4px;
             border-radius: 8px;
-            margin-bottom: 1rem; /* Espaço entre itens */
-            transition: all 0.3s ease; /* Transição suave */
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
         }
-         /* Remove padding do card-body quando o alerta ocupa tudo */
-        #historyItems .card .card-body.p-0 {
-             padding: 0 !important;
-        }
-         /* Estilo padrão do corpo do card no histórico */
-         #historyItems .card .card-body {
-            padding: 1rem;
-            color: var(--cor-texto);
-        }
-
-        /* Estilizando Alertas dentro do Histórico */
+        #historyItems .card .card-body.p-0 { padding: 0 !important; }
+        #historyItems .card .card-body { padding: 1rem; color: var(--cor-texto); }
         #historyItems .alert {
-            margin-bottom: 0; /* Remove margem padrão do alerta */
-            border-radius: 0 8px 8px 0; /* Ajusta cantos */
-            border: none; /* Remove borda padrão do alerta */
+            margin-bottom: 0;
+            border-radius: 0 8px 8px 0;
+            border: none;
             padding: 1rem;
             display: flex;
             align-items: center;
         }
-        #historyItems .alert i { /* Ícones nos alertas */
-            margin-right: 10px;
-            font-size: 1.2rem;
-        }
-
-        /* Cores baseadas nas classes de alerta do Bootstrap (usadas pelo JS) */
+        #historyItems .alert i { margin-right: 10px; font-size: 1.2rem; }
         #historyItems .alert-success { background-color: rgba(40, 167, 69, 0.2); color: #c8f9d3; border-left: 4px solid var(--cor-sucesso); }
-        #historyItems .card .alert-success { border-color: var(--cor-sucesso); } /* Aplica cor à borda do card */
-        #historyItems .alert-success::before { content: "\F26A"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-sucesso); font-size: 1.2rem;} /* Check Circle Fill */
-
+        #historyItems .card.alert-success { border-color: var(--cor-sucesso); } /* Adicionado .card */
+        #historyItems .alert-success::before { content: "\F26A"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-sucesso); font-size: 1.2rem;}
         #historyItems .alert-danger { background-color: rgba(220, 53, 69, 0.2); color: #f8d7da; border-left: 4px solid var(--cor-erro); }
-        #historyItems .card .alert-danger { border-color: var(--cor-erro); }
-        #historyItems .alert-danger::before { content: "\F633"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-erro); font-size: 1.2rem;} /* X Octagon Fill */
-
+        #historyItems .card.alert-danger { border-color: var(--cor-erro); } /* Adicionado .card */
+        #historyItems .alert-danger::before { content: "\F633"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-erro); font-size: 1.2rem;}
         #historyItems .alert-warning { background-color: rgba(255, 193, 7, 0.2); color: #fff3cd; border-left: 4px solid var(--cor-aviso); }
-        #historyItems .card .alert-warning { border-color: var(--cor-aviso); }
-        #historyItems .alert-warning::before { content: "\F33B"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-aviso); font-size: 1.2rem;} /* Exclamation Triangle Fill */
-
+        #historyItems .card.alert-warning { border-color: var(--cor-aviso); } /* Adicionado .card */
+        #historyItems .alert-warning::before { content: "\F33B"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-aviso); font-size: 1.2rem;}
         #historyItems .alert-info { background-color: rgba(23, 162, 184, 0.2); color: #d1ecf1; border-left: 4px solid var(--cor-info); }
-        #historyItems .card .alert-info { border-color: var(--cor-info); }
-        /* Ícone de spinner já é adicionado pelo JS, não precisa de ::before */
+        #historyItems .card.alert-info { border-color: var(--cor-info); } /* Adicionado .card */
+        #historyItems .alert-success .btn-outline-primary { border-color: var(--cor-sucesso); color: var(--cor-sucesso); transition: all 0.3s ease; }
+        #historyItems .alert-success .btn-outline-primary:hover { background-color: var(--cor-sucesso); color: var(--cor-fundo); }
+        .history-item-pending .spinner-border { width: 1rem; height: 1rem; border-width: .2em; margin-right: 0.5em; color: var(--cor-info); }
+        .history-item-pending .text-muted { color: var(--cor-texto-secundario) !important; }
 
-        /* Link de download no histórico */
-        #historyItems .alert-success .btn-outline-primary {
-             border-color: var(--cor-sucesso);
-             color: var(--cor-sucesso);
-             transition: all 0.3s ease;
-        }
-         #historyItems .alert-success .btn-outline-primary:hover {
-             background-color: var(--cor-sucesso);
-             color: var(--cor-fundo);
-         }
-
-
-        /* Classe Pendente (adicionada pelo JS) */
-        .history-item-pending .spinner-border {
-            width: 1rem; height: 1rem; border-width: .2em; margin-right: 0.5em;
-            color: var(--cor-info); /* Cor do spinner */
-        }
-        .history-item-pending .text-muted {
-             color: var(--cor-texto-secundario) !important; /* Garante cor do ID */
-        }
-
-
-        /* --- Footer --- */
+        /* --- Footer Atualizado --- */
         .footer {
             margin-top: 3rem;
-            padding-top: 1.5rem;
+            padding: 1.5rem 0; /* Aumenta padding vertical */
             border-top: 1px solid var(--cor-card-borda);
             color: var(--cor-texto-secundario);
             font-size: 0.9rem;
             text-align: center;
         }
-         .footer .text-danger {
-             color: var(--cor-primaria) !important; /* Coração laranja */
-         }
-         .footer div:last-child {
+        .footer-content {
+            display: flex;
+            justify-content: space-between; /* Espaça os itens */
+            align-items: center;
+            flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
+            max-width: 800px; /* Limita largura no centro */
+            margin: 0 auto; /* Centraliza */
+            padding: 0 15px; /* Padding lateral */
+        }
+        .footer-brand {
              opacity: 0.7;
-         }
+             margin-bottom: 10px; /* Espaço abaixo em mobile */
+        }
+        .footer-made-with {
+            margin-bottom: 10px; /* Espaço abaixo em mobile */
+        }
+        .footer-made-with .text-danger {
+             color: var(--cor-primaria) !important; /* Coração laranja */
+        }
+        .footer-links a {
+            color: var(--cor-texto-secundario);
+            text-decoration: none;
+            margin-left: 15px; /* Espaço entre links */
+            transition: color 0.3s ease;
+        }
+        .footer-links a:hover {
+            color: var(--cor-primaria); /* Laranja no hover */
+        }
+        .footer-links i {
+            font-size: 1.2rem; /* Tamanho dos ícones */
+            vertical-align: middle; /* Alinha ícone com texto (se houver) */
+            margin-right: 5px; /* Espaço ícone-texto */
+        }
 
-        /* --- Responsividade --- */
+        /* --- Responsividade (Ajustes no Footer) --- */
         @media (max-width: 768px) {
             body { padding-top: 1.5rem; padding-bottom: 1.5rem; }
             .main-card { padding: 1.5rem; }
             .upload-area { padding: 1.5rem; }
             .nav-tabs .nav-link { padding: 0.6rem 0.8rem; }
             .btn-primary { padding: 0.6rem 1.2rem; }
-            .footer { flex-direction: column; align-items: center; }
-            .footer div { margin-bottom: 0.5rem;}
+
+            .footer-content {
+                flex-direction: column; /* Empilha tudo no mobile */
+                align-items: center;
+            }
+            .footer-brand, .footer-made-with, .footer-links {
+                margin-bottom: 10px; /* Espaçamento entre itens empilhados */
+            }
+             .footer-links a {
+                 margin-left: 10px; /* Reduz espaço entre links no mobile */
+                 margin-right: 10px;
+             }
         }
 
     </style>
@@ -306,55 +314,54 @@
                 <h1 class="main-title">Rapadura Stock <span class="badge bg-warning text-dark" style="font-size: 0.6em; vertical-align: middle;">BETA V1</span></h1>
 
                 <div class="main-card">
-                    <div class="card-body p-0"> <h5 class="card-title text-center mb-4" style="color: var(--cor-texto);">Baixe Arquivos Premium Grátis</h5>
+                    <div class="card-body p-0">
+                        <h5 class="card-title text-center mb-4" style="color: var(--cor-texto);">Baixe Arquivos Premium Grátis</h5>
 
-                        <div id="userStatus" class="mb-3">
-                            <div class="alert alert-secondary" style="background-color: rgba(255,255,255,0.1); border: none; color: var(--cor-texto-secundario);">Carregando status...</div>
+                        <div id="userStatus" class="mb-3 px-3"> <div class="alert alert-secondary" style="background-color: rgba(255,255,255,0.1); border: none; color: var(--cor-texto-secundario);">Carregando status...</div>
                         </div>
 
-                        <ul class="nav nav-tabs" role="tablist">
-                             <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab">Freepik</button></li>
-                             <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab">Designi</button></li>
-                        </ul>
+                        <div class="px-3"> <ul class="nav nav-tabs" role="tablist">
+                                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab">Freepik</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab">Designi</button></li>
+                            </ul>
 
-                        <div class="tab-content">
-                            <div class="tab-pane fade show active" id="freepikTab" role="tabpanel">
-                                <form id="uploadForm">
-                                    <div class="upload-area">
-                                        <div class="mb-3">
-                                            <label for="freepik_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Freepik</label>
-                                            <input type="text" class="form-control" id="freepik_link" name="freepik_link" placeholder="https://www.freepik.com/..." required>
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="freepikTab" role="tabpanel">
+                                    <form id="uploadForm">
+                                        <div class="upload-area">
+                                            <div class="mb-3">
+                                                <label for="freepik_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Freepik</label>
+                                                <input type="text" class="form-control" id="freepik_link" name="freepik_link" placeholder="https://www.freepik.com/..." required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span>
+                                                <span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span>
+                                            </button>
                                         </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span>
-                                            <span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="tab-pane fade" id="designiTab" role="tabpanel">
-                                <form id="designiForm" onsubmit="downloadDesigni(event)">
-                                    <div class="upload-area">
-                                        <div class="mb-3">
-                                            <label for="designi_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Designi</label>
-                                            <input type="text" class="form-control" id="designi_link" placeholder="Cole aqui a URL do Designi..." required>
+                                    </form>
+                                </div>
+                                <div class="tab-pane fade" id="designiTab" role="tabpanel">
+                                    <form id="designiForm" onsubmit="downloadDesigni(event)">
+                                        <div class="upload-area">
+                                            <div class="mb-3">
+                                                <label for="designi_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Designi</label>
+                                                <input type="text" class="form-control" id="designi_link" placeholder="Cole aqui a URL do Designi..." required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span>
+                                                <span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span>
+                                            </button>
                                         </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span>
-                                            <span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span>
-                                        </button>
-                                    </div>
-                                </form>
+                                    </form>
+                                </div>
                             </div>
                         </div>
 
-                        <div id="uploadHistory" class="mt-4">
-                            <h6 class="card-subtitle mb-3 text-center">Histórico de Respostas</h6>
+                        <div id="uploadHistory" class="mt-4 px-3"> <h6 class="card-subtitle mb-3 text-center">Histórico de Respostas</h6>
                             <div id="historyItems"></div>
                         </div>
 
-                        <div class="tutorial-section">
-                             <h6><i class="bi bi-info-circle-fill"></i> Como Funciona</h6>
+                        <div class="tutorial-section mx-3 mb-3"> <h6><i class="bi bi-info-circle-fill"></i> Como Funciona</h6>
                              <div class="tutorial-step"><i class="bi bi-input-cursor-text"></i> 1. Cole o link (Freepik ou Designi) no campo.</div>
                              <div class="tutorial-step"><i class="bi bi-mouse"></i> 2. Clique em "Baixar".</div>
                              <div class="tutorial-step"><i class="bi bi-clock-history"></i> 3. <strong>Freepik:</strong> Aguarde. O link aparecerá no histórico.</div>
@@ -364,21 +371,31 @@
                     </div>
                 </div>
 
-                <div class="footer d-flex justify-content-between flex-wrap">
-                    <div>Feito com <i class="bi bi-heart-fill text-danger"></i></div>
-                    <div>Rapadura Stock - BETA V1</div>
-                </div>
-
             </div>
         </div>
     </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-made-with">Feito com  <i class="bi bi-heart-fill text-danger"> e rapadura </i></div>
+            <div class="footer-links">
+                <a href="https://www.instagram.com/rapadurastock/" target="_blank" title="Instagram Rapadura Stock">
+                    <i class="bi bi-instagram"></i> Instagram
+                </a>
+                <a href="mailto:suporte@rapadurastock.com" title="Suporte por E-mail">
+                    <i class="bi bi-envelope-fill"></i> Suporte
+                </a>
+            </div>
+            <div class="footer-brand">Rapadura Stock - BETA V1</div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         const activePolls = {};
 
-        // --- Mensagens divertidas (mantidas) ---
+        // --- Mensagens divertidas (Inalterado) ---
         const mensagensFun = [
             "Calma lá, apressadinho(a)! Limite diário atingido.",
             "Eita! Já deu por hoje. Volte amanhã para mais downloads!",
@@ -390,95 +407,91 @@
             return mensagensFun[Math.floor(Math.random() * mensagensFun.length)];
         }
 
-        // --- Função para atualizar display do status (lógica original mantida) ---
-        // A estilização agora é feita primariamente via CSS usando as classes de alerta
+        // --- Função para atualizar display do status (Inalterado) ---
         function updateStatusDisplay(statusHtml) {
             const userStatus = document.getElementById('userStatus');
             if (!userStatus) return;
-
-            // Verifica se o HTML contém a mensagem de limite atingido do backend
-            // A mensagem exata pode variar, ajuste se necessário
             if (statusHtml.includes("Você atingiu o limite") || statusHtml.includes("Limite diário atingido")) {
                 const mensagemFun = getMensagemFun();
-                // Cria um alerta de aviso com a mensagem divertida (usando classes Bootstrap)
                 userStatus.innerHTML = `<div class="alert alert-warning" role="alert">${mensagemFun}</div>`;
             } else {
-                // Se não atingiu o limite, usa o HTML recebido do backend
-                // O backend deve retornar HTML com classes como alert-success, alert-info etc.
                 userStatus.innerHTML = statusHtml;
             }
         }
 
-        // --- Função para buscar e atualizar status (lógica original mantida) ---
+        // --- Função para buscar e atualizar status (Inalterado) ---
         async function fetchAndUpdateStatus() {
             try {
-                const response = await fetch('/status'); // Endpoint original
+                const response = await fetch('/status');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.text();
-                updateStatusDisplay(data); // Chama a função que lida com a exibição
+                updateStatusDisplay(data);
             } catch (error) {
                 console.error('Erro ao carregar status:', error);
                 const userStatus = document.getElementById('userStatus');
-                // Usa classe de alerta de erro Bootstrap
                 if(userStatus) userStatus.innerHTML = '<div class="alert alert-danger" role="alert">Erro ao carregar status. Tente recarregar a página.</div>';
             }
         }
 
-        // --- Função para adicionar item ao histórico (lógica original mantida) ---
-        // A estilização agora depende das classes CSS adicionadas aqui (alert-*) e no CSS
+        // --- Função para adicionar item ao histórico (Inalterado) ---
         function addHistoryItem(contentHtml, itemId = null) {
             const historyDiv = document.getElementById('historyItems');
             const newHistoryItem = document.createElement('div');
-            // Adiciona classe 'card' e 'history-item' para estilização base
             newHistoryItem.className = 'card mb-3 history-item';
             if (itemId) {
                 newHistoryItem.id = `history-item-${itemId}`;
             }
-
-            // Verifica se o conteúdo já é um alerta para não adicionar card-body extra
             const isAlert = contentHtml.includes('class="alert ');
             if (isAlert) {
-                 // Adiciona classes de alerta ao card pai para estilização da borda
                  if (contentHtml.includes('alert-success')) newHistoryItem.classList.add('alert-success');
                  else if (contentHtml.includes('alert-danger')) newHistoryItem.classList.add('alert-danger');
                  else if (contentHtml.includes('alert-warning')) newHistoryItem.classList.add('alert-warning');
                  else if (contentHtml.includes('alert-info')) newHistoryItem.classList.add('alert-info');
-
-                // Coloca o alerta diretamente, sem card-body extra com padding
                 newHistoryItem.innerHTML = `<div class="card-body p-0">${contentHtml}</div>`;
             } else {
-                // Conteúdo genérico vai dentro de um card-body padrão
                 newHistoryItem.innerHTML = `<div class="card-body">${contentHtml}</div>`;
             }
-
             historyDiv.insertBefore(newHistoryItem, historyDiv.firstChild);
             return newHistoryItem;
         }
 
+        // --- Função para reabilitar botão (Helper) ---
+        function enableButton(button) {
+             if (button) {
+                 button.disabled = false;
+                 const normalState = button.querySelector('.normal-state');
+                 const loadingState = button.querySelector('.loading');
+                 if (normalState) normalState.style.display = 'inline';
+                 if (loadingState) loadingState.style.display = 'none';
+             }
+        }
 
-        // --- Função de Polling (lógica original mantida) ---
+        // --- Função de Polling (Atualizada para reabilitar botão) ---
         function pollJobStatus(jobId) {
             console.log(`[POLL] Iniciando polling para Job ID: ${jobId}`);
             const historyItem = document.getElementById(`history-item-${jobId}`);
+            // Seleciona o botão Designi aqui para reabilitá-lo no final
+            const designiSubmitButton = document.querySelector('#designiForm button[type="submit"]');
+
             if (!historyItem) {
                 console.error(`[POLL] Item histórico ${jobId} não encontrado.`);
+                enableButton(designiSubmitButton); // Reabilita botão se item sumir
                 return;
             }
 
-            // Adiciona classe para indicar que está pendente (para CSS)
             historyItem.classList.add('history-item-pending');
 
             const intervalId = setInterval(async () => {
                 try {
                     console.log(`[POLL] Verificando ${jobId}...`);
-                    const response = await fetch(`/check_job/${jobId}`); // Endpoint original
+                    const response = await fetch(`/check_job/${jobId}`);
                     if (!response.ok) {
                         console.error(`[POLL] Erro ${response.status} verificar ${jobId}. Parando.`);
-                        // Atualiza o item com mensagem de erro (usando classes Bootstrap)
                         historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-danger mb-0">Erro ao verificar status (Código: ${response.status}). Tente novamente mais tarde.</div></div>`;
                         historyItem.classList.remove('history-item-pending');
-                        historyItem.classList.add('alert-danger'); // Adiciona classe ao card pai
+                        historyItem.classList.add('alert-danger');
                         clearInterval(intervalId);
+                        enableButton(designiSubmitButton); // **Reabilita botão**
                         delete activePolls[jobId];
                         return;
                     }
@@ -488,82 +501,66 @@
                     if (data.status === 'finished') {
                         console.log(`[POLL] Job ${jobId} concluído!`);
                         clearInterval(intervalId);
-                        delete activePolls[jobId];
                         historyItem.classList.remove('history-item-pending');
-
                         if (data.result && data.result.success) {
                             const result = data.result;
-                            // Gera HTML de sucesso (usando classes Bootstrap)
-                            const successHtml = `
-                                <div class="alert alert-success mb-0">
-                                    <div>
-                                        <div class="mb-2"><strong>Arquivo:</strong> ${result.filename || 'Nome não disponível'}</div>
-                                        <div class="mb-2"><strong>ID:</strong> ${result.file_id}</div>
-                                        <div class="mb-0"><strong>Link:</strong><br>
-                                            <a href="${result.download_link}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                                <i class="bi bi-download"></i> Baixar Arquivo
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>`;
-                            historyItem.innerHTML = `<div class="card-body p-0">${successHtml}</div>`;
-                             historyItem.classList.add('alert-success'); // Adiciona classe ao card pai
+                            const successHtml = `... [HTML de sucesso inalterado] ...`; // Mantém o HTML original
+                            historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-success mb-0"><div><div class="mb-2"><strong>Arquivo:</strong> ${result.filename || 'Nome não disponível'}</div><div class="mb-2"><strong>ID:</strong> ${result.file_id}</div><div class="mb-0"><strong>Link:</strong><br><a href="${result.download_link}" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><i class="bi bi-download"></i> Baixar Arquivo</a></div></div></div></div>`;
+                            historyItem.classList.add('alert-success');
                         } else {
-                            // Gera HTML de falha (usando classes Bootstrap)
                             historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-warning mb-0">Falha no processamento: ${data.result?.error || data.error || 'Erro desconhecido na tarefa.'}</div></div>`;
-                            historyItem.classList.add('alert-warning'); // Adiciona classe ao card pai
+                            historyItem.classList.add('alert-warning');
                         }
-                        await fetchAndUpdateStatus(); // Atualiza status geral após conclusão
+                        enableButton(designiSubmitButton); // **Reabilita botão**
+                        await fetchAndUpdateStatus();
+                        delete activePolls[jobId];
 
                     } else if (data.status === 'failed') {
                         console.log(`[POLL] Job ${jobId} falhou!`);
                         clearInterval(intervalId);
-                        delete activePolls[jobId];
                         historyItem.classList.remove('history-item-pending');
-                        // Gera HTML de falha crítica (usando classes Bootstrap)
                         historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-danger mb-0">Falha crítica no processamento: ${data.error || 'Erro desconhecido.'}</div></div>`;
-                        historyItem.classList.add('alert-danger'); // Adiciona classe ao card pai
-                        await fetchAndUpdateStatus(); // Atualiza status geral após falha
+                        historyItem.classList.add('alert-danger');
+                        enableButton(designiSubmitButton); // **Reabilita botão**
+                        await fetchAndUpdateStatus();
+                        delete activePolls[jobId];
 
                     } else {
-                        // Continua pendente, pode atualizar a mensagem se o backend fornecer
                         console.log(`[POLL] Job ${jobId} status: ${data.status}. Continuando...`);
-                        // Opcional: atualizar a mensagem dentro do alerta de 'info' se `data.message` existir
                         const alertInfo = historyItem.querySelector('.alert-info');
-                        if(alertInfo && data.message && alertInfo.innerText.includes('Processo iniciado...')){ // Evita sobrescrever mensagens finais
+                        if(alertInfo && data.message && alertInfo.innerText.includes('Processo iniciado...')){
                              alertInfo.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${data.message} <span class="text-muted small">(ID: ${jobId})</span>`;
                         }
                     }
                 } catch (error) {
                     console.error(`[POLL] Erro rede polling ${jobId}:`, error);
-                    // Gera HTML de erro de comunicação (usando classes Bootstrap)
                     historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-danger mb-0">Erro de comunicação ao verificar status. Verifique sua conexão.</div></div>`;
                     historyItem.classList.remove('history-item-pending');
-                    historyItem.classList.add('alert-danger'); // Adiciona classe ao card pai
+                    historyItem.classList.add('alert-danger');
                     clearInterval(intervalId);
+                    enableButton(designiSubmitButton); // **Reabilita botão**
                     delete activePolls[jobId];
                 }
-            }, 7000); // Intervalo original de 7 segundos
+            }, 7000);
 
             activePolls[jobId] = intervalId;
 
-            // Timeout máximo (lógica original mantida)
             setTimeout(() => {
                 if (activePolls[jobId]) {
                     console.warn(`[POLL] Timeout máximo ${jobId}. Parando.`);
                     clearInterval(activePolls[jobId]);
-                    delete activePolls[jobId];
-                    // Atualiza para aviso se ainda estava pendente
                     if (historyItem.classList.contains('history-item-pending')) {
                         historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-warning mb-0">⏳ Tempo limite de verificação atingido. O processo pode ter concluído ou falhado. Verifique manualmente se necessário.</div></div>`;
                         historyItem.classList.remove('history-item-pending');
-                        historyItem.classList.add('alert-warning'); // Adiciona classe ao card pai
+                        historyItem.classList.add('alert-warning');
                     }
+                    enableButton(designiSubmitButton); // **Reabilita botão**
+                    delete activePolls[jobId];
                 }
-            }, 30 * 60 * 1000); // Timeout original de 30 minutos
+            }, 30 * 60 * 1000);
         }
 
-        // --- Função Download Designi (lógica original mantida, chama fetchAndUpdateStatus) ---
+        // --- Função Download Designi (Atualizada para NÃO reabilitar botão no finally) ---
         async function downloadDesigni(event) {
             event.preventDefault();
             const form = document.getElementById('designiForm');
@@ -573,12 +570,12 @@
             const loadingState = form.querySelector('.loading');
             const submitButton = form.querySelector('button[type="submit"]');
 
-            submitButton.disabled = true; // Desabilita botão
+            submitButton.disabled = true;
             normalState.style.display = 'none';
             loadingState.style.display = 'inline-block';
 
             try {
-                const response = await fetch('/download-designi', { // Endpoint original
+                const response = await fetch('/download-designi', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: link })
@@ -586,29 +583,30 @@
                 const data = await response.json();
 
                 if (response.ok && data.success && data.job_id) {
-                    // Adiciona item inicial ao histórico (usando classes Bootstrap)
                     const initialMsgHtml = `<div class="alert alert-info mb-0"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${data.message || 'Processo iniciado...'} <span class="text-muted small">(ID: ${data.job_id})</span></div>`;
                     addHistoryItem(initialMsgHtml, data.job_id);
-                    linkInput.value = ''; // Limpa input
-                    pollJobStatus(data.job_id); // Inicia polling
+                    linkInput.value = '';
+                    pollJobStatus(data.job_id); // Inicia polling, botão continua desabilitado
                 } else {
-                    // Adiciona item de erro ao histórico (usando classes Bootstrap)
+                    // Erro ao iniciar, reabilita o botão
                     addHistoryItem(`<div class="alert alert-danger mb-0">Erro ao iniciar download: ${data.error || `Erro ${response.status}. Verifique o link.`}</div>`);
+                    enableButton(submitButton); // **Reabilita botão aqui**
                 }
-                await fetchAndUpdateStatus(); // Atualiza status geral
+                // Atualiza status APENAS se não iniciou polling ou se falhou ao iniciar
+                if (!(response.ok && data.success && data.job_id)) {
+                     await fetchAndUpdateStatus();
+                }
             } catch (error) {
                 console.error('Erro fetch /download-designi:', error);
-                // Adiciona item de erro de comunicação (usando classes Bootstrap)
                 addHistoryItem(`<div class="alert alert-danger mb-0">Erro de comunicação com o servidor: ${error.message}</div>`);
-                await fetchAndUpdateStatus(); // Tenta atualizar status mesmo com erro
-            } finally {
-                submitButton.disabled = false; // Reabilita botão
-                normalState.style.display = 'inline';
-                loadingState.style.display = 'none';
+                enableButton(submitButton); // **Reabilita botão aqui**
+                await fetchAndUpdateStatus();
             }
+            // O finally foi removido para que o botão só seja reabilitado
+            // pela função pollJobStatus ou nos casos de erro acima.
         }
 
-        // --- Event Listener Formulário Freepik (lógica original mantida, chama fetchAndUpdateStatus) ---
+        // --- Event Listener Formulário Freepik (Lógica de botão inalterada) ---
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             const form = this;
@@ -617,36 +615,29 @@
             const linkInput = document.getElementById('freepik_link');
             const submitButton = form.querySelector('button[type="submit"]');
 
-            submitButton.disabled = true; // Desabilita botão
+            submitButton.disabled = true;
             normalState.style.display = 'none';
             loadingState.style.display = 'inline-block';
 
             try {
-                const response = await fetch('/upload', { method: 'POST', body: new FormData(form) }); // Endpoint original
-                const dataHtml = await response.text(); // Espera HTML como resposta
-
-                // Adiciona a resposta HTML diretamente ao histórico
-                // O backend deve retornar HTML com as classes de alerta corretas (alert-success, alert-danger, etc.)
+                const response = await fetch('/upload', { method: 'POST', body: new FormData(form) });
+                const dataHtml = await response.text();
                 addHistoryItem(dataHtml);
-
                 if (response.ok) {
-                    linkInput.value = ''; // Limpa input em caso de sucesso
+                    linkInput.value = '';
                 }
-
-                await fetchAndUpdateStatus(); // Atualiza status geral
+                await fetchAndUpdateStatus();
             } catch (error) {
                 console.error('Erro fetch /upload:', error);
-                // Adiciona item de erro de comunicação (usando classes Bootstrap)
                 addHistoryItem(`<div class="alert alert-danger mb-0">Erro de comunicação com o servidor: ${error.message}</div>`);
-                await fetchAndUpdateStatus(); // Tenta atualizar status mesmo com erro
+                await fetchAndUpdateStatus();
             } finally {
-                submitButton.disabled = false; // Reabilita botão
-                normalState.style.display = 'inline';
-                loadingState.style.display = 'none';
+                // Botão Freepik é reabilitado aqui (comportamento original)
+                 enableButton(submitButton);
             }
         });
 
-        // --- Carregamento inicial do status (lógica original mantida) ---
+        // --- Carregamento inicial do status (Inalterado) ---
         window.addEventListener('DOMContentLoaded', fetchAndUpdateStatus);
 
     </script>
