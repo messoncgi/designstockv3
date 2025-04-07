@@ -1,862 +1,654 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapadura Stok | Baixe arquivos premium gratuitamente</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Rapadura Stock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
     <style>
+        /* --- Configurações Globais e Tema --- */
         :root {
-            --primary: #f97316;
-            --primary-dark: #ea580c;
-            --secondary: #16a34a;
-            --dark: #0f172a;
-            --light: #f8fafc;
-            --gray: #94a3b8;
-            --success: #16a34a;
-            --warning: #d97706;
-            --error: #dc2626;
-            --info: #2563eb;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            background-image: 
-                radial-gradient(at 47% 33%, hsl(222.18, 47%, 11%) 0, transparent 59%), 
-                radial-gradient(at 82% 65%, hsl(22, 78%, 19%) 0, transparent 55%);
-            color: var(--light);
-            min-height: 100vh;
-        }
-        
-        .glass-container {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
-            transition: all 0.3s ease;
+            --cor-primaria: #FFA500; /* Laranja */
+            --cor-primaria-hover: #FF8C00; /* Laranja Escuro */
+            --cor-fundo: #1a1a1a; /* Preto/Cinza bem escuro */
+            --cor-fundo-gradiente-inicio: #2a2a2a;
+            --cor-fundo-gradiente-fim: #1a1a1a;
+            --cor-card-fundo: rgba(40, 40, 40, 0.6); /* Fundo do card semi-transparente */
+            --cor-card-borda: rgba(255, 165, 0, 0.2); /* Borda sutil laranja */
+            --cor-texto: #f0f0f0; /* Texto claro */
+            --cor-texto-secundario: #a0a0a0; /* Texto secundário/muted */
+            --cor-sucesso: #28a745;
+            --cor-erro: #dc3545;
+            --cor-aviso: #ffc107;
+            --cor-info: #17a2b8; /* Azul para 'pendente' ou info */
+            --glow-cor: rgba(255, 165, 0, 0.7); /* Cor do brilho laranja */
         }
 
-        .glass-container:hover {
-            border-color: rgba(249, 115, 22, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(249, 115, 22, 0.1);
+        body {
+            font-family: 'Inter', sans-serif; /* Fonte moderna */
+            background: linear-gradient(135deg, var(--cor-fundo-gradiente-inicio), var(--cor-fundo-gradiente-fim));
+            background-attachment: fixed; /* Mantém o gradiente fixo */
+            color: var(--cor-texto);
+            padding-top: 3rem; /* Espaço no topo após remover navbar */
+            padding-bottom: 3rem;
         }
-        
+
+        /* --- Card Principal com Efeito Vidro --- */
+        .main-card {
+            background-color: var(--cor-card-fundo);
+            border: 1px solid var(--cor-card-borda);
+            border-radius: 15px; /* Bordas mais arredondadas */
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(10px); /* Efeito vidro */
+            -webkit-backdrop-filter: blur(10px); /* Suporte Safari */
+            margin-bottom: 2rem; /* Espaço antes do footer */
+        }
+
+        /* --- Título --- */
+        .main-title {
+            color: var(--cor-primaria);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* --- Abas (Tabs) --- */
+        .nav-tabs {
+            border-bottom: 1px solid var(--cor-card-borda);
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--cor-texto-secundario);
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-right: 5px;
+            padding: 0.8rem 1rem;
+            transition: all 0.3s ease; /* Transição suave */
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--cor-texto);
+            border-bottom-color: rgba(255, 165, 0, 0.5); /* Laranja suave no hover */
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--cor-primaria);
+            background-color: transparent;
+            border-bottom: 3px solid var(--cor-primaria);
+            font-weight: 700;
+        }
+
+        /* --- Área de Upload Refinada --- */
+        .upload-area {
+            border: 1px solid var(--cor-card-borda); /* Borda sólida sutil */
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            margin: 20px 0;
+            background-color: rgba(0, 0, 0, 0.1); /* Fundo levemente diferente */
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .form-label {
+            color: var(--cor-texto-secundario);
+            margin-bottom: 0.5rem;
+            display: block; /* Garante que o label fique acima */
+        }
+
         .form-control {
-            background-color: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--light);
-            border-radius: 12px;
-            padding: 12px 16px;
-            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.1); /* Fundo do input */
+            border: 1px solid var(--cor-card-borda);
+            color: var(--cor-texto);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
         }
-        
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3);
-            background-color: rgba(15, 23, 42, 0.7);
-        }
-        
+
         .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.4);
+            color: var(--cor-texto-secundario);
+            opacity: 0.7;
         }
-        
+
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--cor-primaria);
+            box-shadow: 0 0 0 0.25rem rgba(255, 165, 0, 0.25); /* Focus laranja */
+            color: var(--cor-texto);
+        }
+
+        /* --- Botões com Efeito Glow --- */
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: none;
-            border-radius: 12px;
-            padding: 14px 24px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(249, 115, 22, 0.2);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-        
-        .history-item {
-            background: rgba(15, 23, 42, 0.6);
-            border-left: 4px solid var(--primary);
+            background-color: var(--cor-primaria);
+            border-color: var(--cor-primaria);
+            color: var(--cor-fundo); /* Texto escuro no botão laranja */
+            padding: 0.75rem 1.5rem;
             border-radius: 8px;
-            margin-bottom: 16px;
+            font-weight: 500;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 5px rgba(0,0,0,0.3); /* Sombra base */
         }
-        
-        .history-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(249, 115, 22, 0.15);
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: var(--cor-primaria-hover);
+            border-color: var(--cor-primaria-hover);
+            color: var(--cor-fundo);
+            /* Efeito Glow */
+            box-shadow: 0 0 15px 5px var(--glow-cor);
         }
-        
-        .alert {
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: none;
+
+        .btn-primary .loading { display: none; } /* Mantido do original */
+        .btn-primary:disabled .loading { display: inline-block; } /* Mostrar loading quando desabilitado */
+        .btn-primary:disabled .normal-state { display: none; } /* Esconder texto normal quando desabilitado */
+
+        .btn-primary .spinner-border {
+            color: var(--cor-fundo); /* Cor do spinner */
         }
-        
-        .alert-success {
-            background-color: rgba(22, 163, 74, 0.15);
-            color: #16a34a;
+
+        /* --- Seção Tutorial Mais Visual --- */
+        .tutorial-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.1); /* Fundo sutil */
+            border-radius: 10px;
+            border-left: 4px solid var(--cor-primaria);
         }
-        
-        .alert-info {
-            background-color: rgba(37, 99, 235, 0.15);
-            color: #2563eb;
+
+        .tutorial-section h6 {
+            color: var(--cor-primaria);
+            margin-bottom: 15px;
+            font-weight: 700;
         }
-        
-        .alert-warning {
-            background-color: rgba(217, 119, 6, 0.15);
-            color: #d97706;
+        .tutorial-section h6 i {
+             margin-right: 8px;
         }
-        
-        .alert-danger {
-            background-color: rgba(220, 38, 38, 0.15);
-            color: #dc2626;
-        }
-        
-        .status-badge {
-            display: inline-flex;
+
+        .tutorial-step {
+            margin-bottom: 10px;
+            padding-left: 10px;
+            color: var(--cor-texto-secundario);
+            display: flex; /* Para alinhar ícone e texto */
             align-items: center;
-            padding: 6px 12px;
-            border-radius: 99px;
-            font-size: 14px;
-            font-weight: 600;
         }
-        
-        .status-remaining {
-            background: rgba(22, 163, 74, 0.15);
-            color: var(--success);
+        .tutorial-step i {
+            margin-right: 10px; /* Espaço entre ícone e texto */
+            color: var(--cor-primaria); /* Ícones laranja */
+            font-size: 1.1rem;
+            min-width: 20px; /* Garante alinhamento */
+            text-align: center;
         }
-        
-        .status-limit {
-            background: rgba(220, 38, 38, 0.15);
-            color: var(--error);
+
+        /* --- Histórico com Distinção Visual --- */
+         #uploadHistory h6 {
+            color: var(--cor-texto-secundario);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
         }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
+
+        #historyItems .card {
+            background-color: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil */
+            border-left-width: 4px; /* Borda esquerda mais grossa para status */
+            border-radius: 8px;
+            margin-bottom: 1rem; /* Espaço entre itens */
+            transition: all 0.3s ease; /* Transição suave */
         }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+         /* Remove padding do card-body quando o alerta ocupa tudo */
+        #historyItems .card .card-body.p-0 {
+             padding: 0 !important;
         }
-        
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(15, 23, 42, 0.8);
+         /* Estilo padrão do corpo do card no histórico */
+         #historyItems .card .card-body {
+            padding: 1rem;
+            color: var(--cor-texto);
+        }
+
+        /* Estilizando Alertas dentro do Histórico */
+        #historyItems .alert {
+            margin-bottom: 0; /* Remove margem padrão do alerta */
+            border-radius: 0 8px 8px 0; /* Ajusta cantos */
+            border: none; /* Remove borda padrão do alerta */
+            padding: 1rem;
             display: flex;
             align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
         }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        #historyItems .alert i { /* Ícones nos alertas */
+            margin-right: 10px;
+            font-size: 1.2rem;
         }
 
-        .platform-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-            filter: brightness(0) invert(1);
+        /* Cores baseadas nas classes de alerta do Bootstrap (usadas pelo JS) */
+        #historyItems .alert-success { background-color: rgba(40, 167, 69, 0.2); color: #c8f9d3; border-left: 4px solid var(--cor-sucesso); }
+        #historyItems .card .alert-success { border-color: var(--cor-sucesso); } /* Aplica cor à borda do card */
+        #historyItems .alert-success::before { content: "\F26A"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-sucesso); font-size: 1.2rem;} /* Check Circle Fill */
+
+        #historyItems .alert-danger { background-color: rgba(220, 53, 69, 0.2); color: #f8d7da; border-left: 4px solid var(--cor-erro); }
+        #historyItems .card .alert-danger { border-color: var(--cor-erro); }
+        #historyItems .alert-danger::before { content: "\F633"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-erro); font-size: 1.2rem;} /* X Octagon Fill */
+
+        #historyItems .alert-warning { background-color: rgba(255, 193, 7, 0.2); color: #fff3cd; border-left: 4px solid var(--cor-aviso); }
+        #historyItems .card .alert-warning { border-color: var(--cor-aviso); }
+        #historyItems .alert-warning::before { content: "\F33B"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-aviso); font-size: 1.2rem;} /* Exclamation Triangle Fill */
+
+        #historyItems .alert-info { background-color: rgba(23, 162, 184, 0.2); color: #d1ecf1; border-left: 4px solid var(--cor-info); }
+        #historyItems .card .alert-info { border-color: var(--cor-info); }
+        /* Ícone de spinner já é adicionado pelo JS, não precisa de ::before */
+
+        /* Link de download no histórico */
+        #historyItems .alert-success .btn-outline-primary {
+             border-color: var(--cor-sucesso);
+             color: var(--cor-sucesso);
+             transition: all 0.3s ease;
         }
+         #historyItems .alert-success .btn-outline-primary:hover {
+             background-color: var(--cor-sucesso);
+             color: var(--cor-fundo);
+         }
+
+
+        /* Classe Pendente (adicionada pelo JS) */
+        .history-item-pending .spinner-border {
+            width: 1rem; height: 1rem; border-width: .2em; margin-right: 0.5em;
+            color: var(--cor-info); /* Cor do spinner */
+        }
+        .history-item-pending .text-muted {
+             color: var(--cor-texto-secundario) !important; /* Garante cor do ID */
+        }
+
+
+        /* --- Footer --- */
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--cor-card-borda);
+            color: var(--cor-texto-secundario);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+         .footer .text-danger {
+             color: var(--cor-primaria) !important; /* Coração laranja */
+         }
+         .footer div:last-child {
+             opacity: 0.7;
+         }
+
+        /* --- Responsividade --- */
+        @media (max-width: 768px) {
+            body { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+            .main-card { padding: 1.5rem; }
+            .upload-area { padding: 1.5rem; }
+            .nav-tabs .nav-link { padding: 0.6rem 0.8rem; }
+            .btn-primary { padding: 0.6rem 1.2rem; }
+            .footer { flex-direction: column; align-items: center; }
+            .footer div { margin-bottom: 0.5rem;}
+        }
+
     </style>
 </head>
-<body class="antialiased">
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="spinner"></div>
-    </div>
+<body>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
 
-    <div class="container mx-auto px-4 py-12 max-w-4xl">
-        <!-- Header -->
-        <header class="mb-10 text-center">
-            <div class="flex items-center justify-center mb-4">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-3">
-                    <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                    <path d="M3 17L12 22L21 17" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                    <path d="M3 12L12 17L21 12" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-                <h1 class="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">Rapadura Stock</h1>
-            </div>
-            <p class="text-lg text-gray-400">Baixe arquivos premium de forma gratuita e rápida</p>
-        </header>
+                <h1 class="main-title">Rapadura Stock <span class="badge bg-warning text-dark" style="font-size: 0.6em; vertical-align: middle;">BETA V1</span></h1>
 
-        <div class="space-y-8">
-            <!-- User Status -->
-            <div id="userStatus">
-                <div class="glass-container p-5">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="bg-orange-500/20 p-3 rounded-lg mr-4">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-orange-400">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
+                <div class="main-card">
+                    <div class="card-body p-0"> <h5 class="card-title text-center mb-4" style="color: var(--cor-texto);">Baixe Arquivos Premium Grátis</h5>
+
+                        <div id="userStatus" class="mb-3">
+                            <div class="alert alert-secondary" style="background-color: rgba(255,255,255,0.1); border: none; color: var(--cor-texto-secundario);">Carregando status...</div>
+                        </div>
+
+                        <ul class="nav nav-tabs" role="tablist">
+                             <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab">Freepik</button></li>
+                             <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab">Designi</button></li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="freepikTab" role="tabpanel">
+                                <form id="uploadForm">
+                                    <div class="upload-area">
+                                        <div class="mb-3">
+                                            <label for="freepik_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Freepik</label>
+                                            <input type="text" class="form-control" id="freepik_link" name="freepik_link" placeholder="https://www.freepik.com/..." required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span>
+                                            <span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span>
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-300">Seu status diário</h3>
-                                <p class="text-gray-400">Carregando informações...</p>
+                            <div class="tab-pane fade" id="designiTab" role="tabpanel">
+                                <form id="designiForm" onsubmit="downloadDesigni(event)">
+                                    <div class="upload-area">
+                                        <div class="mb-3">
+                                            <label for="designi_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Designi</label>
+                                            <input type="text" class="form-control" id="designi_link" placeholder="Cole aqui a URL do Designi..." required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span>
+                                            <span class="loading"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...</span>
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                        <div class="status-badge">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-1">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>Carregando...</span>
+
+                        <div id="uploadHistory" class="mt-4">
+                            <h6 class="card-subtitle mb-3 text-center">Histórico de Respostas</h6>
+                            <div id="historyItems"></div>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Freepik Download Section -->
-            <div class="glass-container p-6">
-                <div class="flex items-center mb-5">
-                    <img src="https://freepik.cdnpk.net/img/logo-freepik.svg" alt="Freepik" class="platform-icon">
-                    <h3 class="text-xl font-semibold">Download do Freepik</h3>
-                </div>
-                
-                <form id="freepikForm" class="mb-3">
-                    <div class="mb-4">
-                        <label for="freepik_link" class="block text-sm font-medium text-gray-300 mb-2">Cole o link do Freepik</label>
-                        <input type="text" class="form-control w-full" id="freepik_link" name="freepik_link" placeholder="https://www.freepik.com/photo/12345678.htm" required>
-                    </div>
-                    <button type="submit" class="btn-primary w-full">
-                        <span class="normal-state flex items-center justify-center">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Baixar Grátis
-                        </span>
-                        <span class="loading hidden items-center justify-center">
-                            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                            Processando...
-                        </span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Designi Download Section -->
-            <div class="glass-container p-6">
-                <div class="flex items-center mb-5">
-                    <img src="https://designistampas.com.br/wp-content/uploads/2020/06/cropped-horizonatalz-192x192.png" alt="Designi" class="platform-icon">
-                    <h3 class="text-xl font-semibold">Download do Designi</h3>
-                </div>
-
-                <form id="designiForm" class="mb-3">
-                    <div class="mb-4">
-                        <label for="designi_link" class="block text-sm font-medium text-gray-300 mb-2">Cole o link do Designi</label>
-                        <input type="text" class="form-control w-full" id="designi_link" placeholder="https://designistampas.com.br/produto/..." required>
-                    </div>
-                    <button type="submit" class="btn-primary w-full">
-                        <span class="normal-state flex items-center justify-center">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Baixar Grátis
-                        </span>
-                        <span class="loading hidden items-center justify-center">
-                            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                            Processando...
-                        </span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- History Section -->
-            <div>
-                <div class="flex items-center justify-between mb-4 px-2">
-                    <h3 class="text-xl font-semibold text-white">Histórico de Downloads</h3>
-                    <span class="text-sm text-gray-400">Últimas 24 horas</span>
-                </div>
-                
-                <div id="historyItems" class="space-y-3">
-                    <div class="history-item">
-                        <div class="p-4">
-                            <div class="alert alert-info flex items-start">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <div>
-                                    <p class="font-medium">Nenhum histórico recente</p>
-                                    <p class="text-sm opacity-80">Seus downloads aparecerão aqui</p>
-                                </div>
-                            </div>
+                        <div class="tutorial-section">
+                             <h6><i class="bi bi-info-circle-fill"></i> Como Funciona</h6>
+                             <div class="tutorial-step"><i class="bi bi-input-cursor-text"></i> 1. Cole o link (Freepik ou Designi) no campo.</div>
+                             <div class="tutorial-step"><i class="bi bi-mouse"></i> 2. Clique em "Baixar".</div>
+                             <div class="tutorial-step"><i class="bi bi-clock-history"></i> 3. <strong>Freepik:</strong> Aguarde. O link aparecerá no histórico.</div>
+                             <div class="tutorial-step"><i class="bi bi-hourglass-split"></i> 4. <strong>Designi:</strong> Aguarde o processo (pode demorar). O resultado final aparecerá no histórico.</div>
+                             <div class="tutorial-step"><i class="bi bi-bar-chart-line-fill"></i> 5. <strong>Limite:</strong> Verifique seu status de downloads diários acima.</div>
                         </div>
                     </div>
                 </div>
+
+                <div class="footer d-flex justify-content-between flex-wrap">
+                    <div>Feito com <i class="bi bi-heart-fill text-danger"></i></div>
+                    <div>Rapadura Stock - BETA V1</div>
+                </div>
+
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="flex items-center justify-between text-sm text-gray-500 mt-12">
-            <div class="flex items-center">
-                <span>Feito com</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="text-red-500 mx-1">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="0" fill="currentColor"></path>
-                </svg>
-                <span>por Rapadura Stok</span>
-            </div>
-            <div class="flex items-center">
-                <span>BETA</span>
-                <span class="bg-orange-500/20 text-orange-400 text-xs px-2 py-1 rounded-full ml-2">v2.0.0</span>
-            </div>
-        </footer>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         const activePolls = {};
 
-        // Mensagens divertidas para limite atingido
+        // --- Mensagens divertidas (mantidas) ---
         const mensagensFun = [
-            "Parece que você está ansioso(a) para baixar! Limite diário atingido, volte amanhã!",
-            "Você já conseguiu todos os downloads de hoje. Excelente trabalho!",
-            "Calma, calma! O limite diário foi alcançado. Até amanhã!",
-            "Boom! Você explodiu o limite diário de downloads.",
-            "2 downloads já foram conquistados hoje. Amanhã tem mais!"
+            "Calma lá, apressadinho(a)! Limite diário atingido.",
+            "Eita! Já deu por hoje. Volte amanhã para mais downloads!",
+            "Limite de 2 downloads alcançado. Dê um descanso pro servidor!",
+            "Você está demais! Mas o limite diário já foi... tente amanhã.",
+            "Parabéns, você zerou os downloads de hoje! 🎉 Volte amanhã!"
         ];
-        
         function getMensagemFun() {
             return mensagensFun[Math.floor(Math.random() * mensagensFun.length)];
         }
 
-        // Mostrar loading overlay
-        function showLoading() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-        }
-        
-        // Esconder loading overlay
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-        }
-
-        // Atualiza o display do status
+        // --- Função para atualizar display do status (lógica original mantida) ---
+        // A estilização agora é feita primariamente via CSS usando as classes de alerta
         function updateStatusDisplay(statusHtml) {
             const userStatus = document.getElementById('userStatus');
             if (!userStatus) return;
 
-            // Se o HTML contém a mensagem de limite atingido
-            if (statusHtml.includes("Você atingiu o limite")) {
+            // Verifica se o HTML contém a mensagem de limite atingido do backend
+            // A mensagem exata pode variar, ajuste se necessário
+            if (statusHtml.includes("Você atingiu o limite") || statusHtml.includes("Limite diário atingido")) {
                 const mensagemFun = getMensagemFun();
-                userStatus.innerHTML = `
-                    <div class="glass-container p-5">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="bg-red-500/20 p-3 rounded-lg mr-4">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-red-400">
-                                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-300">Status de downloads</h3>
-                                    <p class="text-gray-400">${mensagemFun}</p>
-                                </div>
-                            </div>
-                            <div class="status-badge status-limit">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-1">
-                                    <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Limite</span>
-                            </div>
-                        </div>
-                    </div>`;
+                // Cria um alerta de aviso com a mensagem divertida (usando classes Bootstrap)
+                userStatus.innerHTML = `<div class="alert alert-warning" role="alert">${mensagemFun}</div>`;
             } else {
                 // Se não atingiu o limite, usa o HTML recebido do backend
-                userStatus.innerHTML = `
-                <div class="glass-container p-5">
-                    ${statusHtml}
-                </div>`;
+                // O backend deve retornar HTML com classes como alert-success, alert-info etc.
+                userStatus.innerHTML = statusHtml;
             }
         }
 
-        // Função para buscar e atualizar status
+        // --- Função para buscar e atualizar status (lógica original mantida) ---
         async function fetchAndUpdateStatus() {
             try {
-                showLoading();
-                const response = await fetch('/status');
+                const response = await fetch('/status'); // Endpoint original
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.text();
-                updateStatusDisplay(data);
+                updateStatusDisplay(data); // Chama a função que lida com a exibição
             } catch (error) {
                 console.error('Erro ao carregar status:', error);
                 const userStatus = document.getElementById('userStatus');
-                if(userStatus) userStatus.innerHTML = `
-                    <div class="glass-container p-5">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="bg-red-500/20 p-3 rounded-lg mr-4">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-red-400">
-                                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-300">Status de downloads</h3>
-                                    <p class="text-gray-400">Erro ao carregar status do servidor</p>
-                                </div>
-                            </div>
-                            <div class="status-badge status-limit">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-1">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Erro</span>
-                            </div>
-                        </div>
-                    </div>`;
-            } finally {
-                hideLoading();
+                // Usa classe de alerta de erro Bootstrap
+                if(userStatus) userStatus.innerHTML = '<div class="alert alert-danger" role="alert">Erro ao carregar status. Tente recarregar a página.</div>';
             }
         }
 
-        // Adiciona item ao histórico
+        // --- Função para adicionar item ao histórico (lógica original mantida) ---
+        // A estilização agora depende das classes CSS adicionadas aqui (alert-*) e no CSS
         function addHistoryItem(contentHtml, itemId = null) {
             const historyDiv = document.getElementById('historyItems');
-            
-            // Remove o placeholder se existir
-            if (historyDiv.children.length === 1 && 
-                historyDiv.firstElementChild.querySelector('.alert-info')) {
-                historyDiv.innerHTML = '';
-            }
-            
             const newHistoryItem = document.createElement('div');
-            newHistoryItem.className = 'history-item glass-container p-0';
-            if (itemId) { 
-                newHistoryItem.id = `history-item-${itemId}`; 
+            // Adiciona classe 'card' e 'history-item' para estilização base
+            newHistoryItem.className = 'card mb-3 history-item';
+            if (itemId) {
+                newHistoryItem.id = `history-item-${itemId}`;
             }
-            
-            newHistoryItem.innerHTML = `
-                <div class="p-4">
-                    ${contentHtml}
-                </div>`;
-            
+
+            // Verifica se o conteúdo já é um alerta para não adicionar card-body extra
+            const isAlert = contentHtml.includes('class="alert ');
+            if (isAlert) {
+                 // Adiciona classes de alerta ao card pai para estilização da borda
+                 if (contentHtml.includes('alert-success')) newHistoryItem.classList.add('alert-success');
+                 else if (contentHtml.includes('alert-danger')) newHistoryItem.classList.add('alert-danger');
+                 else if (contentHtml.includes('alert-warning')) newHistoryItem.classList.add('alert-warning');
+                 else if (contentHtml.includes('alert-info')) newHistoryItem.classList.add('alert-info');
+
+                // Coloca o alerta diretamente, sem card-body extra com padding
+                newHistoryItem.innerHTML = `<div class="card-body p-0">${contentHtml}</div>`;
+            } else {
+                // Conteúdo genérico vai dentro de um card-body padrão
+                newHistoryItem.innerHTML = `<div class="card-body">${contentHtml}</div>`;
+            }
+
             historyDiv.insertBefore(newHistoryItem, historyDiv.firstChild);
             return newHistoryItem;
         }
 
-        // Verifica o status do job periodicamente
+
+        // --- Função de Polling (lógica original mantida) ---
         function pollJobStatus(jobId) {
             console.log(`[POLL] Iniciando polling para Job ID: ${jobId}`);
             const historyItem = document.getElementById(`history-item-${jobId}`);
-            if (!historyItem) { 
-                console.error(`[POLL] Item histórico ${jobId} não encontrado.`); 
-                return; 
+            if (!historyItem) {
+                console.error(`[POLL] Item histórico ${jobId} não encontrado.`);
+                return;
             }
-            
-            // Contador de tentativas para cada job
-            let retryCount = 0;
-            const maxRetries = 3;
-            
+
+            // Adiciona classe para indicar que está pendente (para CSS)
+            historyItem.classList.add('history-item-pending');
+
             const intervalId = setInterval(async () => {
                 try {
                     console.log(`[POLL] Verificando ${jobId}...`);
-                    const response = await fetch(`/check_job/${jobId}`);
-                    
-                    // Resetar contador de tentativas após sucesso
-                    retryCount = 0;
-                    
+                    const response = await fetch(`/check_job/${jobId}`); // Endpoint original
                     if (!response.ok) {
-                        console.error(`[POLL] Erro ${response.status} verificar ${jobId}.`);
-                        
-                        // Tentar novamente se não excedeu o limite de tentativas
-                        if (retryCount < maxRetries) {
-                            retryCount++;
-                            console.log(`[POLL] Tentativa ${retryCount}/${maxRetries} para ${jobId}`);
-                            return; // Continua o intervalo para tentar novamente
-                        }
-                        
-                        console.error(`[POLL] Máximo de tentativas excedido para ${jobId}. Parando.`);
-                        historyItem.innerHTML = `
-                            <div class="alert alert-danger">
-                                <div class="flex items-start">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <div>
-                                        <p class="font-medium">Erro ao verificar status</p>
-                                        <p class="text-sm opacity-80">Código: ${response.status}</p>
-                                    </div>
-                                </div>
-                            </div>`;
-                        clearInterval(intervalId); 
-                        delete activePolls[jobId]; 
+                        console.error(`[POLL] Erro ${response.status} verificar ${jobId}. Parando.`);
+                        // Atualiza o item com mensagem de erro (usando classes Bootstrap)
+                        historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-danger mb-0">Erro ao verificar status (Código: ${response.status}). Tente novamente mais tarde.</div></div>`;
+                        historyItem.classList.remove('history-item-pending');
+                        historyItem.classList.add('alert-danger'); // Adiciona classe ao card pai
+                        clearInterval(intervalId);
+                        delete activePolls[jobId];
                         return;
                     }
-                    
                     const data = await response.json();
                     console.log(`[POLL] Status ${jobId}:`, data);
-                    
+
                     if (data.status === 'finished') {
-                        console.log(`[POLL] Job ${jobId} concluído!`); 
-                        clearInterval(intervalId); 
+                        console.log(`[POLL] Job ${jobId} concluído!`);
+                        clearInterval(intervalId);
                         delete activePolls[jobId];
-                        
+                        historyItem.classList.remove('history-item-pending');
+
                         if (data.result && data.result.success) {
                             const result = data.result;
+                            // Gera HTML de sucesso (usando classes Bootstrap)
                             const successHtml = `
-                                <div class="alert alert-success">
-                                    <div class="flex items-start">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M22 4L12 14.01l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        <div>
-                                            <p class="font-medium">Download concluído com sucesso!</p>
-                                            <p class="text-sm opacity-80">Arquivo: ${result.filename || 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <a href="${result.download_link}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 hover:bg-blue-500/20 transition">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    Baixar arquivo
-                                </a>
-                            </div>`;
-                        historyItem.innerHTML = successHtml;
-                        } else { 
-                            historyItem.innerHTML = `
-                                <div class="alert alert-warning">
-                                    <div class="flex items-start">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        <div>
-                                            <p class="font-medium">Falha no processamento</p>
-                                            <p class="text-sm opacity-80">${data.result?.error || data.error || 'Erro desconhecido.'}</p>
+                                <div class="alert alert-success mb-0">
+                                    <div>
+                                        <div class="mb-2"><strong>Arquivo:</strong> ${result.filename || 'Nome não disponível'}</div>
+                                        <div class="mb-2"><strong>ID:</strong> ${result.file_id}</div>
+                                        <div class="mb-0"><strong>Link:</strong><br>
+                                            <a href="${result.download_link}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                <i class="bi bi-download"></i> Baixar Arquivo
+                                            </a>
                                         </div>
                                     </div>
                                 </div>`;
+                            historyItem.innerHTML = `<div class="card-body p-0">${successHtml}</div>`;
+                             historyItem.classList.add('alert-success'); // Adiciona classe ao card pai
+                        } else {
+                            // Gera HTML de falha (usando classes Bootstrap)
+                            historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-warning mb-0">Falha no processamento: ${data.result?.error || data.error || 'Erro desconhecido na tarefa.'}</div></div>`;
+                            historyItem.classList.add('alert-warning'); // Adiciona classe ao card pai
                         }
+                        await fetchAndUpdateStatus(); // Atualiza status geral após conclusão
+
                     } else if (data.status === 'failed') {
-                        console.log(`[POLL] Job ${jobId} falhou!`); 
-                        clearInterval(intervalId); 
+                        console.log(`[POLL] Job ${jobId} falhou!`);
+                        clearInterval(intervalId);
                         delete activePolls[jobId];
-                        historyItem.innerHTML = `
-                            <div class="alert alert-danger">
-                                <div class="flex items-start">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <div>
-                                        <p class="font-medium">Falha crítica</p>
-                                        <p class="text-sm opacity-80">${data.error || 'Erro desconhecido.'}</p>
-                                    </div>
-                                </div>
-                            </div>`;
-                    } else { 
-                        console.log(`[POLL] Job ${jobId} status: ${data.status}. Continuando...`); 
+                        historyItem.classList.remove('history-item-pending');
+                        // Gera HTML de falha crítica (usando classes Bootstrap)
+                        historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-danger mb-0">Falha crítica no processamento: ${data.error || 'Erro desconhecido.'}</div></div>`;
+                        historyItem.classList.add('alert-danger'); // Adiciona classe ao card pai
+                        await fetchAndUpdateStatus(); // Atualiza status geral após falha
+
+                    } else {
+                        // Continua pendente, pode atualizar a mensagem se o backend fornecer
+                        console.log(`[POLL] Job ${jobId} status: ${data.status}. Continuando...`);
+                        // Opcional: atualizar a mensagem dentro do alerta de 'info' se `data.message` existir
+                        const alertInfo = historyItem.querySelector('.alert-info');
+                        if(alertInfo && data.message && alertInfo.innerText.includes('Processo iniciado...')){ // Evita sobrescrever mensagens finais
+                             alertInfo.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${data.message} <span class="text-muted small">(ID: ${jobId})</span>`;
+                        }
                     }
                 } catch (error) {
                     console.error(`[POLL] Erro rede polling ${jobId}:`, error);
-                    historyItem.innerHTML = `
-                        <div class="alert alert-danger">
-                            <div class="flex items-start">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <div>
-                                    <p class="font-medium">Erro de comunicação</p>
-                                    <p class="text-sm opacity-80">Não foi possível verificar o status do download</p>
-                                </div>
-                            </div>
-                        </div>`;
-                    clearInterval(intervalId); 
+                    // Gera HTML de erro de comunicação (usando classes Bootstrap)
+                    historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-danger mb-0">Erro de comunicação ao verificar status. Verifique sua conexão.</div></div>`;
+                    historyItem.classList.remove('history-item-pending');
+                    historyItem.classList.add('alert-danger'); // Adiciona classe ao card pai
+                    clearInterval(intervalId);
                     delete activePolls[jobId];
                 }
-            }, 7000);
-            
+            }, 7000); // Intervalo original de 7 segundos
+
             activePolls[jobId] = intervalId;
-            
+
+            // Timeout máximo (lógica original mantida)
             setTimeout(() => {
                 if (activePolls[jobId]) {
-                    console.warn(`[POLL] Timeout máximo ${jobId}. Parando.`); 
-                    clearInterval(activePolls[jobId]); 
+                    console.warn(`[POLL] Timeout máximo ${jobId}. Parando.`);
+                    clearInterval(activePolls[jobId]);
                     delete activePolls[jobId];
-                    if (historyItem.classList.contains('history-item-pending')) { 
-                        historyItem.innerHTML = `
-                            <div class="alert alert-warning">
-                                <div class="flex items-start">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <div>
-                                        <p class="font-medium">Tempo limite excedido</p>
-                                        <p class="text-sm opacity-80">Verifique o Google Drive para o arquivo</p>
-                                    </div>
-                                </div>
-                            </div>`; 
+                    // Atualiza para aviso se ainda estava pendente
+                    if (historyItem.classList.contains('history-item-pending')) {
+                        historyItem.innerHTML = `<div class="card-body p-0"><div class="alert alert-warning mb-0">⏳ Tempo limite de verificação atingido. O processo pode ter concluído ou falhado. Verifique manualmente se necessário.</div></div>`;
+                        historyItem.classList.remove('history-item-pending');
+                        historyItem.classList.add('alert-warning'); // Adiciona classe ao card pai
                     }
                 }
-            }, 30 * 60 * 1000);
+            }, 30 * 60 * 1000); // Timeout original de 30 minutos
         }
 
-        // Inicializa a página
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carrega o status do usuário
-            fetchAndUpdateStatus();
-            
-            // Configura o formulário do Freepik
-            const freepikForm = document.getElementById('freepikForm');
-            if (freepikForm) {
-                freepikForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const freepikLink = document.getElementById('freepik_link').value.trim();
-                    if (!freepikLink) return;
-                    
-                    try {
-                        // Mostra estado de carregamento
-                        const submitBtn = freepikForm.querySelector('button[type="submit"]');
-                        submitBtn.disabled = true;
-                        submitBtn.querySelector('.normal-state').classList.add('hidden');
-                        submitBtn.querySelector('.loading').classList.remove('hidden');
-                        
-                        // Envia requisição
-                        const response = await fetch('/download_freepik', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ url: freepikLink })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (response.ok) {
-                            console.log('[FREEPIK] Job iniciado:', data);
-                            
-                            // Adiciona ao histórico
-                            const historyItem = addHistoryItem(`
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <img src="https://freepik.cdnpk.net/img/logo-freepik.svg" alt="Freepik" class="platform-icon w-5 h-5 mr-2">
-                                        <div>
-                                            <p class="font-medium">Processando download</p>
-                                            <p class="text-sm opacity-80 truncate max-w-xs">${freepikLink}</p>
-                                        </div>
-                                    </div>
-                                    <div class="animate-pulse flex space-x-1">
-                                        <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
-                                        <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
-                                        <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
-                                    </div>
-                                </div>
-                            `, data.job_id);
-                            
-                            historyItem.classList.add('history-item-pending');
-                            
-                            // Inicia polling
-                            pollJobStatus(data.job_id);
-                            
-                            // Limpa o formulário
-                            document.getElementById('freepik_link').value = '';
-                            
-                        } else {
-                            console.error('[FREEPIK] Erro:', data);
-                            addHistoryItem(`
-                                <div class="alert alert-danger">
-                                    <div class="flex items-start">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        <div>
-                                            <p class="font-medium">Erro ao iniciar download</p>
-                                            <p class="text-sm opacity-80">${data.error || 'Erro desconhecido'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            `);
-                        }
-                    } catch (error) {
-                        console.error('[FREEPIK] Erro de rede:', error);
-                        addHistoryItem(`
-                            <div class="alert alert-danger">
-                                <div class="flex items-start">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <div>
-                                        <p class="font-medium">Erro de conexão</p>
-                                        <p class="text-sm opacity-80">Não foi possível conectar ao servidor</p>
-                                    </div>
-                                </div>
-                            </div>
-                        `);
-                    } finally {
-                        // Restaura o botão
-                        const submitBtn = freepikForm.querySelector('button[type="submit"]');
-                        submitBtn.disabled = false;
-                        submitBtn.querySelector('.normal-state').classList.remove('hidden');
-                        submitBtn.querySelector('.loading').classList.add('hidden');
-                        
-                        // Atualiza o status
-                        fetchAndUpdateStatus();
-                    }
+        // --- Função Download Designi (lógica original mantida, chama fetchAndUpdateStatus) ---
+        async function downloadDesigni(event) {
+            event.preventDefault();
+            const form = document.getElementById('designiForm');
+            const linkInput = document.getElementById('designi_link');
+            const link = linkInput.value;
+            const normalState = form.querySelector('.normal-state');
+            const loadingState = form.querySelector('.loading');
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            submitButton.disabled = true; // Desabilita botão
+            normalState.style.display = 'none';
+            loadingState.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/download-designi', { // Endpoint original
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: link })
                 });
+                const data = await response.json();
+
+                if (response.ok && data.success && data.job_id) {
+                    // Adiciona item inicial ao histórico (usando classes Bootstrap)
+                    const initialMsgHtml = `<div class="alert alert-info mb-0"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${data.message || 'Processo iniciado...'} <span class="text-muted small">(ID: ${data.job_id})</span></div>`;
+                    addHistoryItem(initialMsgHtml, data.job_id);
+                    linkInput.value = ''; // Limpa input
+                    pollJobStatus(data.job_id); // Inicia polling
+                } else {
+                    // Adiciona item de erro ao histórico (usando classes Bootstrap)
+                    addHistoryItem(`<div class="alert alert-danger mb-0">Erro ao iniciar download: ${data.error || `Erro ${response.status}. Verifique o link.`}</div>`);
+                }
+                await fetchAndUpdateStatus(); // Atualiza status geral
+            } catch (error) {
+                console.error('Erro fetch /download-designi:', error);
+                // Adiciona item de erro de comunicação (usando classes Bootstrap)
+                addHistoryItem(`<div class="alert alert-danger mb-0">Erro de comunicação com o servidor: ${error.message}</div>`);
+                await fetchAndUpdateStatus(); // Tenta atualizar status mesmo com erro
+            } finally {
+                submitButton.disabled = false; // Reabilita botão
+                normalState.style.display = 'inline';
+                loadingState.style.display = 'none';
             }
-            
-            // Configura o formulário do Designi
-            const designiForm = document.getElementById('designiForm');
-            if (designiForm) {
-                designiForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const designiLink = document.getElementById('designi_link').value.trim();
-                    if (!designiLink) return;
-                    
-                    try {
-                        // Mostra estado de carregamento
-                        const submitBtn = designiForm.querySelector('button[type="submit"]');
-                        submitBtn.disabled = true;
-                        submitBtn.querySelector('.normal-state').classList.add('hidden');
-                        submitBtn.querySelector('.loading').classList.remove('hidden');
-                        
-                        // Envia requisição
-                        const response = await fetch('/download_designi', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ url: designiLink })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (response.ok) {
-                            console.log('[DESIGNI] Job iniciado:', data);
-                            
-                            // Adiciona ao histórico
-                            const historyItem = addHistoryItem(`
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <img src="https://designistampas.com.br/wp-content/uploads/2020/06/cropped-horizonatalz-192x192.png" alt="Designi" class="platform-icon w-5 h-5 mr-2">
-                                        <div>
-                                            <p class="font-medium">Processando download</p>
-                                            <p class="text-sm opacity-80 truncate max-w-xs">${designiLink}</p>
-                                        </div>
-                                    </div>
-                                    <div class="animate-pulse flex space-x-1">
-                                        <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
-                                        <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
-                                        <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
-                                    </div>
-                                </div>
-                            `, data.job_id);
-                            
-                            historyItem.classList.add('history-item-pending');
-                            
-                            // Inicia polling
-                            pollJobStatus(data.job_id);
-                            
-                            // Limpa o formulário
-                            document.getElementById('designi_link').value = '';
-                            
-                        } else {
-                            console.error('[DESIGNI] Erro:', data);
-                            addHistoryItem(`
-                                <div class="alert alert-danger">
-                                    <div class="flex items-start">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        <div>
-                                            <p class="font-medium">Erro ao iniciar download</p>
-                                            <p class="text-sm opacity-80">${data.error || 'Erro desconhecido'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            `);
-                        }
-                    } catch (error) {
-                        console.error('[DESIGNI] Erro de rede:', error);
-                        addHistoryItem(`
-                            <div class="alert alert-danger">
-                                <div class="flex items-start">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 flex-shrink-0 mt-1">
-                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <div>
-                                        <p class="font-medium">Erro de conexão</p>
-                                        <p class="text-sm opacity-80">Não foi possível conectar ao servidor</p>
-                                    </div>
-                                </div>
-                            </div>
-                        `);
-                    } finally {
-                        // Restaura o botão
-                        const submitBtn = designiForm.querySelector('button[type="submit"]');
-                        submitBtn.disabled = false;
-                        submitBtn.querySelector('.normal-state').classList.remove('hidden');
-                        submitBtn.querySelector('.loading').classList.add('hidden');
-                        
-                        // Atualiza o status
-                        fetchAndUpdateStatus();
-                    }
-                });
+        }
+
+        // --- Event Listener Formulário Freepik (lógica original mantida, chama fetchAndUpdateStatus) ---
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = this;
+            const normalState = form.querySelector('.normal-state');
+            const loadingState = form.querySelector('.loading');
+            const linkInput = document.getElementById('freepik_link');
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            submitButton.disabled = true; // Desabilita botão
+            normalState.style.display = 'none';
+            loadingState.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: new FormData(form) }); // Endpoint original
+                const dataHtml = await response.text(); // Espera HTML como resposta
+
+                // Adiciona a resposta HTML diretamente ao histórico
+                // O backend deve retornar HTML com as classes de alerta corretas (alert-success, alert-danger, etc.)
+                addHistoryItem(dataHtml);
+
+                if (response.ok) {
+                    linkInput.value = ''; // Limpa input em caso de sucesso
+                }
+
+                await fetchAndUpdateStatus(); // Atualiza status geral
+            } catch (error) {
+                console.error('Erro fetch /upload:', error);
+                // Adiciona item de erro de comunicação (usando classes Bootstrap)
+                addHistoryItem(`<div class="alert alert-danger mb-0">Erro de comunicação com o servidor: ${error.message}</div>`);
+                await fetchAndUpdateStatus(); // Tenta atualizar status mesmo com erro
+            } finally {
+                submitButton.disabled = false; // Reabilita botão
+                normalState.style.display = 'inline';
+                loadingState.style.display = 'none';
             }
         });
+
+        // --- Carregamento inicial do status (lógica original mantida) ---
+        window.addEventListener('DOMContentLoaded', fetchAndUpdateStatus);
+
     </script>
 </body>
 </html>
