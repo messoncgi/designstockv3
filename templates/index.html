@@ -8,124 +8,620 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- Estilos CSS Inalterados --- */
+        /* --- Variáveis do Tema --- */
         :root {
-            --cor-primaria: #FFA500; /* Laranja */
-            --cor-primaria-hover: #FF8C00; /* Laranja Escuro */
-            --cor-fundo: #1a1a1a; /* Preto/Cinza bem escuro */
-            --cor-fundo-gradiente-inicio: #2a2a2a;
-            --cor-fundo-gradiente-fim: #1a1a1a;
-            --cor-card-fundo: rgba(40, 40, 40, 0.6); /* Fundo do card semi-transparente */
-            --cor-card-borda: rgba(255, 165, 0, 0.2); /* Borda sutil laranja */
-            --cor-texto: #f0f0f0; /* Texto claro */
-            --cor-texto-secundario: #a0a0a0; /* Texto secundário/muted */
-            --cor-sucesso: #28a745; /* Verde mantido para o botão interno */
-            --cor-erro: #dc3545;
-            --cor-aviso: #ffc107; /* Amarelo usado para o novo 'sucesso' */
-            --cor-info: #17a2b8;
-            --glow-cor: rgba(255, 165, 0, 0.7);
+            --cor-primaria: #7C3AED; /* Roxo principal */
+            --cor-primaria-hover: #6D28D9; /* Roxo escuro */
+            --cor-bg-start: #111111; /* Início do gradiente de fundo */
+            --cor-bg-end: #0f0f1d; /* Fim do gradiente de fundo */
+            --cor-texto: #ffffff;
+            --cor-texto-secundario: rgba(255, 255, 255, 0.7);
+            --cor-texto-terciario: rgba(255, 255, 255, 0.5);
+            --cor-card-fundo: rgba(30, 30, 46, 0.4);
+            --cor-card-borda: rgba(124, 58, 237, 0.2);
+            --cor-sucesso: #10B981; /* Verde */
+            --cor-erro: #EF4444; /* Vermelho */
+            --cor-aviso: #F59E0B; /* Amarelo */
+            --cor-info: #3B82F6; /* Azul */
+            --glass-blur: 10px;
+            --glow-cor: rgba(124, 58, 237, 0.5);
         }
 
+        /* --- Estilos de Animação --- */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(124, 58, 237, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+        }
+
+        @keyframes fadeInSlideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Estilos Base --- */
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--cor-fundo-gradiente-inicio), var(--cor-fundo-gradiente-fim));
-            background-attachment: fixed;
+            background: linear-gradient(-45deg, var(--cor-bg-start), #1e1b4b, #4c1d95, var(--cor-bg-end));
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
             color: var(--cor-texto);
             padding-top: 3rem;
             padding-bottom: 3rem;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .container { flex-grow: 1; }
-        .main-card { background-color: var(--cor-card-fundo); border: 1px solid var(--cor-card-borda); border-radius: 15px; padding: 2rem; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin-bottom: 2rem; }
-        .main-title { color: var(--cor-primaria); text-align: center; margin-bottom: 1.5rem; font-weight: 700; }
-        .nav-tabs { border-bottom: 1px solid var(--cor-card-borda); margin-bottom: 1.5rem; }
-        .nav-tabs .nav-link { color: var(--cor-texto-secundario); background-color: transparent; border: none; border-bottom: 3px solid transparent; margin-right: 5px; padding: 0.8rem 1rem; transition: all 0.3s ease; font-weight: 500; }
-        .nav-tabs .nav-link:hover { color: var(--cor-texto); border-bottom-color: rgba(255, 165, 0, 0.5); }
-        .nav-tabs .nav-link.active { color: var(--cor-primaria); background-color: transparent; border-bottom: 3px solid var(--cor-primaria); font-weight: 700; }
-        .upload-area { border: 1px solid var(--cor-card-borda); border-radius: 10px; padding: 2rem; text-align: center; margin: 20px 0; background-color: rgba(0, 0, 0, 0.1); transition: background-color 0.3s ease; }
-        .upload-area:hover { background-color: rgba(0, 0, 0, 0.2); }
-        .form-label { color: var(--cor-texto-secundario); margin-bottom: 0.5rem; display: block; }
-        .form-control { background-color: rgba(255, 255, 255, 0.1); border: 1px solid var(--cor-card-borda); color: var(--cor-texto); border-radius: 8px; padding: 0.75rem 1rem; }
-        .form-control::placeholder { color: var(--cor-texto-secundario); opacity: 0.7; }
-        .form-control:focus { background-color: rgba(255, 255, 255, 0.15); border-color: var(--cor-primaria); box-shadow: 0 0 0 0.25rem rgba(255, 165, 0, 0.25); color: var(--cor-texto); }
-        .btn-primary { background-color: var(--cor-primaria); border-color: var(--cor-primaria); color: var(--cor-fundo); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
-        .btn-primary:disabled { background-color: #6c757d; border-color: #6c757d; color: #ccc; cursor: not-allowed; box-shadow: none; opacity: 0.65; }
+        /* Efeito de overlay para o fundo */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3cdefs%3e%3cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3e%3cpath fill='none' stroke='rgba(255,255,255,0.03)' d='M 40 0 L 0 0 0 40'/%3e%3c/pattern%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='url(%23grid)'/%3e%3c/svg%3e");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- Classes de Utilidade --- */
+        .container { 
+            flex-grow: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background-color: var(--cor-card-fundo);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease-in-out;
+            animation: fadeInUp 0.5s ease-out forwards;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+            border-color: rgba(124, 58, 237, 0.2);
+        }
+
+        .glow-effect {
+            box-shadow: 0 0 15px var(--glow-cor);
+            animation: pulse 2s infinite;
+        }
+
+        .float-in {
+            animation: fadeInUp 0.5s ease-out forwards, float 6s ease-in-out infinite;
+        }
+
+        /* --- Elementos de Página --- */
+        .main-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+            background: linear-gradient(90deg, #7C3AED, #C4B5FD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            font-size: 2.5rem;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .title-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .badge-premium {
+            background: linear-gradient(90deg, #F59E0B, #FBBF24);
+            color: #111111;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.7em;
+            vertical-align: middle;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        /* Formulários e Inputs */
+        .form-label {
+            color: var(--cor-texto-secundario);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-weight: 500;
+        }
+
+        .form-control {
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--cor-texto);
+            border-radius: 0.5rem;
+            padding: 0.85rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder {
+            color: var(--cor-texto-terciario);
+        }
+
+        .form-control:focus {
+            background-color: rgba(0, 0, 0, 0.25);
+            border-color: var(--cor-primaria);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+            color: var(--cor-texto);
+        }
+
+        /* Botões */
+        .btn-primary {
+            background: linear-gradient(45deg, var(--cor-primaria), var(--cor-primaria-hover));
+            border: none;
+            color: white;
+            padding: 0.85rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+        }
+
         .btn-primary:hover:not(:disabled),
-        .btn-primary:focus:not(:disabled) { background-color: var(--cor-primaria-hover); border-color: var(--cor-primaria-hover); color: var(--cor-fundo); box-shadow: 0 0 15px 5px var(--glow-cor); }
+        .btn-primary:focus:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+            background: linear-gradient(45deg, var(--cor-primaria-hover), var(--cor-primaria));
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: #666;
+            border-color: #666;
+            color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.65;
+        }
+
         .btn-primary .loading { display: none; }
         .btn-primary .loading span { vertical-align: middle; }
-        .btn-primary .loading .spinner-border { margin-right: 0.5em; }
+        .btn-primary .loading .spinner-border { margin-right: 0.5rem; }
         .btn-primary:disabled .loading { display: inline-block; }
         .btn-primary:disabled .normal-state { display: none; }
-        .btn-primary .spinner-border { color: var(--cor-fundo); }
-        .btn-primary:disabled .spinner-border { color: #ccc; }
-        .tutorial-section { margin-top: 30px; padding: 20px; background-color: rgba(0, 0, 0, 0.1); border-radius: 10px; border-left: 4px solid var(--cor-primaria); }
-        .tutorial-section h6 { color: var(--cor-primaria); margin-bottom: 15px; font-weight: 700; }
-        .tutorial-section h6 i { margin-right: 8px; }
-        .tutorial-step { margin-bottom: 10px; padding-left: 10px; color: var(--cor-texto-secundario); display: flex; align-items: center; }
-        .tutorial-step i { margin-right: 10px; color: var(--cor-primaria); font-size: 1.1rem; min-width: 20px; text-align: center; }
-        #uploadHistoryHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        #uploadHistoryHeader h6 { color: var(--cor-texto-secundario); font-weight: 500; margin-bottom: 0; text-align: left; }
-        #clearHistoryBtn { color: var(--cor-texto-secundario); border-color: var(--cor-texto-secundario); padding: 0.25rem 0.5rem; font-size: 0.8rem; opacity: 0.7; transition: all 0.3s ease; }
-        #clearHistoryBtn:hover { color: var(--cor-erro); border-color: var(--cor-erro); background-color: rgba(220, 53, 69, 0.1); opacity: 1; }
-        #clearHistoryBtn:disabled { opacity: 0.3; cursor: not-allowed; color: var(--cor-texto-secundario); border-color: var(--cor-texto-secundario); background-color: transparent; }
-        #historyItems .card { position: relative; background-color: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.1); border-left-width: 4px; border-radius: 8px; margin-bottom: 1rem; animation: fadeInSlideDown 0.5s ease-out forwards; overflow: hidden; }
-        #historyItems .card .card-body.p-0 { padding: 0 !important; }
-        #historyItems .card .card-body { padding: 1rem; color: var(--cor-texto); }
-        #historyItems .alert { margin-bottom: 0; border-radius: 0 8px 8px 0; border: none; padding: 1rem; display: flex; align-items: center; }
-        #historyItems .alert i { margin-right: 10px; font-size: 1.2rem; }
-        .history-timestamp { position: absolute; top: 5px; right: 10px; font-size: 0.7rem; color: var(--cor-texto-secundario); opacity: 0.6; }
-        @keyframes fadeInSlideDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
-        #historyItems .alert-success { background-color: rgba(255, 193, 7, 0.15); color: #ffeaa7; border-left: 4px solid var(--cor-aviso); }
-        #historyItems .card.alert-success { border-color: var(--cor-aviso); }
-        #historyItems .alert-success::before { content: "\F26A"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-aviso); font-size: 1.2rem; }
-        #historyItems .alert-success .btn-outline-primary { border-color: var(--cor-sucesso); color: var(--cor-sucesso); transition: all 0.3s ease; }
-        #historyItems .alert-success .btn-outline-primary:hover { background-color: var(--cor-sucesso); color: var(--cor-fundo); }
-        #historyItems .alert-danger { background-color: rgba(220, 53, 69, 0.2); color: #f8d7da; border-left: 4px solid var(--cor-erro); }
-        #historyItems .card.alert-danger { border-color: var(--cor-erro); }
-        #historyItems .alert-danger::before { content: "\F633"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-erro); font-size: 1.2rem;}
-        #historyItems .alert-warning { background-color: rgba(255, 193, 7, 0.2); color: #fff3cd; border-left: 4px solid var(--cor-aviso); }
-        #historyItems .card.alert-warning { border-color: var(--cor-aviso); }
-        #historyItems .alert-warning::before { content: "\F33B"; font-family: bootstrap-icons; margin-right: 10px; color: var(--cor-aviso); font-size: 1.2rem;}
-        #historyItems .alert-info { background-color: rgba(23, 162, 184, 0.2); color: #d1ecf1; border-left: 4px solid var(--cor-info); }
-        #historyItems .card.alert-info { border-color: var(--cor-info); }
-        .history-item-pending .spinner-border { width: 1rem; height: 1rem; border-width: .2em; color: var(--cor-info); }
-        .history-item-pending .text-muted { color: var(--cor-texto-secundario) !important; }
-        .footer { margin-top: 3rem; padding: 1.5rem 0; border-top: 1px solid var(--cor-card-borda); color: var(--cor-texto-secundario); font-size: 0.9rem; text-align: center; }
-        .footer-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; max-width: 800px; margin: 0 auto; padding: 0 15px; }
-        .footer-brand { opacity: 0.7; margin-bottom: 10px; }
-        .footer-made-with { margin-bottom: 10px; }
-        .footer-made-with .text-danger { color: var(--cor-primaria) !important; }
-        .footer-links a { color: var(--cor-texto-secundario); text-decoration: none; margin-left: 15px; transition: color 0.3s ease; }
-        .footer-links a:hover { color: var(--cor-primaria); }
-        .footer-links i { font-size: 1.2rem; vertical-align: middle; margin-right: 5px; }
-        @media (max-width: 768px) { body { padding-top: 1.5rem; padding-bottom: 1.5rem; } .main-card { padding: 1.5rem; } .upload-area { padding: 1.5rem; } .nav-tabs .nav-link { padding: 0.6rem 0.8rem; } .btn-primary { padding: 0.6rem 1.2rem; } .footer-content { flex-direction: column; align-items: center; } .footer-brand, .footer-made-with, .footer-links { margin-bottom: 10px; } .footer-links a { margin-left: 10px; margin-right: 10px; } }
 
+        /* Abas de Navegação */
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--cor-texto-secundario);
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 1rem 1.5rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--cor-texto);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--cor-primaria);
+            background-color: rgba(124, 58, 237, 0.1);
+            border-bottom: 3px solid var(--cor-primaria);
+            font-weight: 700;
+        }
+
+        /* Área de Upload */
+        .upload-area {
+            border: 1px dashed rgba(124, 58, 237, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            margin: 20px 0;
+            background-color: rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background-color: rgba(0, 0, 0, 0.25);
+            border-color: rgba(124, 58, 237, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Seção de Tutorial */
+        .tutorial-section {
+            margin-top: 2rem;
+            border-radius: 1rem;
+            animation: fadeInUp 0.8s ease-out forwards;
+            overflow: hidden;
+        }
+
+        .tutorial-section h6 {
+            color: var(--cor-primaria);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+
+        .tutorial-section h6 i {
+            margin-right: 0.5rem;
+            width: 24px;
+            height: 24px;
+            background-color: var(--cor-primaria);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tutorial-step {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.15);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out forwards;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tutorial-step:hover {
+            background-color: rgba(0, 0, 0, 0.25);
+            border-color: rgba(124, 58, 237, 0.2);
+        }
+
+        .tutorial-step i {
+            margin-right: 1rem;
+            color: var(--cor-primaria);
+            font-size: 1.25rem;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* Histórico de Uploads */
+        #uploadHistoryHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+            border-radius: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #uploadHistoryHeader h6 {
+            color: var(--cor-texto);
+            font-weight: 600;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        #uploadHistoryHeader h6 i {
+            margin-right: 0.5rem;
+            color: var(--cor-primaria);
+        }
+
+        #clearHistoryBtn {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--cor-texto-secundario);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        #clearHistoryBtn:hover:not(:disabled) {
+            color: var(--cor-erro);
+            border-color: var(--cor-erro);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        #clearHistoryBtn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        #historyItems .card {
+            position: relative;
+            margin-bottom: 1rem;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInSlideDown 0.5s ease-out forwards;
+        }
+
+        #historyItems .card:hover {
+            transform: translateY(-2px);
+        }
+
+        #historyItems .card .card-body {
+            padding: 1rem;
+            color: var(--cor-texto);
+        }
+
+        #historyItems .alert {
+            margin-bottom: 0;
+            border-radius: 0;
+            border: none;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .history-timestamp {
+            font-size: 0.75rem;
+            color: var(--cor-texto-terciario);
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        /* Status específicos do histórico */
+        #historyItems .alert-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #ecfdf5;
+            border-left: 4px solid var(--cor-sucesso);
+        }
+
+        #historyItems .card.alert-success {
+            border-color: var(--cor-sucesso);
+        }
+
+        #historyItems .alert-success .btn-outline-primary {
+            color: var(--cor-sucesso);
+            border-color: var(--cor-sucesso);
+            background-color: rgba(16, 185, 129, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        #historyItems .alert-success .btn-outline-primary:hover {
+            background-color: var(--cor-sucesso);
+            color: white;
+        }
+
+        #historyItems .alert-danger {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #fee2e2;
+            border-left: 4px solid var(--cor-erro);
+        }
+
+        #historyItems .card.alert-danger {
+            border-color: var(--cor-erro);
+        }
+
+        #historyItems .alert-info {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #eff6ff;
+            border-left: 4px solid var(--cor-info);
+        }
+
+        #historyItems .card.alert-info {
+            border-color: var(--cor-info);
+        }
+
+        .history-item-pending .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.2em;
+            color: var(--cor-info);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--cor-texto-secundario);
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .footer-brand {
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+
+        .footer-made-with {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .footer-made-with i {
+            color: #ef4444;
+            margin: 0 0.25rem;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 1.5rem;
+                padding-bottom: 1.5rem;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .glass-card {
+                padding: 1rem;
+            }
+            
+            .upload-area {
+                padding: 1.5rem;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn-primary {
+                padding: 0.75rem 1.25rem;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .footer-brand, .footer-made-with {
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Efeito de destaque para os cartões do histórico */
+        .fade-border {
+            position: relative;
+        }
+
+        .fade-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cor-primaria), transparent);
+            animation: fadeInUp 1s ease-out forwards;
+        }
+
+        /* Estilo para botões de download */
+        .download-btn {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--cor-texto-secundario);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .download-btn:hover {
+            background-color: var(--cor-primaria);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .download-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Status do usuário */
+        #userStatus .alert {
+            background: linear-gradient(to right, rgba(124, 58, 237, 0.1), rgba(0, 0, 0, 0.2));
+            border-radius: 0.75rem;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Badge para downloads disponíveis */
+        .badge-downloads {
+            background: linear-gradient(45deg, var(--cor-primaria), var(--cor-primaria-hover));
+            color: white;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
+        }
     </style>
 </head>
 <body>
     <div class="container mt-4">
         <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10">
+            <div class="col-lg-9 col-md-11">
 
-                <h1 class="main-title">Rapadura Stock <span class="badge bg-warning text-dark" style="font-size: 0.6em; vertical-align: middle;">BETA V1</span></h1>
+                <div class="title-container">
+                    <h1 class="main-title">Rapadura Stock <span class="badge-premium">PREMIUM</span></h1>
+                </div>
 
-                <div class="main-card">
-                    <div class="card-body p-0">
-                        <h5 class="card-title text-center mb-4" style="color: var(--cor-texto);">Baixe Arquivos Premium Grátis</h5>
+                <div class="glass-card mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="text-center mb-4" style="color: white; font-weight: 600;">Baixe Arquivos Premium Gratuitamente</h5>
 
-                        <div id="userStatus" class="mb-3 px-3"> <div class="alert alert-secondary" style="background-color: rgba(255,255,255,0.1); border: none; color: var(--cor-texto-secundario);">Carregando status...</div>
+                        <div id="userStatus" class="mb-4 px-2">
+                            <div class="alert" style="color: var(--cor-texto);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-person-circle me-2"></i> 
+                                        Carregando status...
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="px-3"> <ul class="nav nav-tabs" role="tablist">
-                                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab">Freepik</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab">Designi</button></li>
+                        <div class="px-2">
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#freepikTab" type="button" role="tab">
+                                        <i class="bi bi-image me-2"></i>Freepik
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#designiTab" type="button" role="tab">
+                                        <i class="bi bi-brush me-2"></i>Designi
+                                    </button>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
@@ -133,11 +629,15 @@
                                     <form id="uploadForm">
                                         <div class="upload-area">
                                             <div class="mb-3">
-                                                <label for="freepik_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Freepik</label>
+                                                <label for="freepik_link" class="form-label">
+                                                    <i class="bi bi-link-45deg"></i> Link do Freepik
+                                                </label>
                                                 <input type="text" class="form-control" id="freepik_link" name="freepik_link" placeholder="https://www.freepik.com/..." required>
                                             </div>
                                             <button type="submit" class="btn btn-primary">
-                                                <span class="normal-state"><i class="bi bi-download"></i> Baixar Grátis</span>
+                                                <span class="normal-state">
+                                                    <i class="bi bi-download"></i> Baixar Premium
+                                                </span>
                                                 <span class="loading">
                                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...
                                                 </span>
@@ -145,16 +645,21 @@
                                         </div>
                                     </form>
                                 </div>
+
                                 <div class="tab-pane fade" id="designiTab" role="tabpanel">
                                     <form id="designiForm">
                                         <div class="upload-area">
                                             <div class="mb-3">
-                                                <label for="designi_link" class="form-label"><i class="bi bi-link-45deg"></i> Link do Designi</label>
+                                                <label for="designi_link" class="form-label">
+                                                    <i class="bi bi-link-45deg"></i> Link do Designi
+                                                </label>
                                                 <input type="text" class="form-control" id="designi_link" placeholder="Cole aqui a URL do Designi..." required>
                                             </div>
-                                             <button type="submit" class="btn btn-primary">
-                                                <span class="normal-state"><i class="bi bi-download"></i> Baixar do Designi</span>
-                                                 <span class="loading">
+                                            <button type="submit" class="btn btn-primary">
+                                                <span class="normal-state">
+                                                    <i class="bi bi-download"></i> Baixar Premium
+                                                </span>
+                                                <span class="loading">
                                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...
                                                 </span>
                                             </button>
@@ -164,243 +669,366 @@
                             </div>
                         </div>
 
-                        <div id="uploadHistory" class="mt-4 px-3">
-                             <div id="uploadHistoryHeader">
-                                 <h6>Histórico de Respostas</h6>
-                                 <button id="clearHistoryBtn" class="btn btn-sm btn-outline-secondary" title="Limpar Histórico" disabled>
-                                     <i class="bi bi-trash3-fill"></i> Limpar
-                                 </button>
-                             </div>
-                            <div id="historyItems">
+                        <!-- Tutorial Section -->
+                        <div class="tutorial-section mx-2 mb-4">
+                            <div class="bg-black/20 rounded-xl p-4 border border-white/5">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center mr-3 shadow-md glow-effect">
+                                        <i class="bi bi-lightbulb text-white"></i>
+                                    </div>
+                                    <h6 class="mb-0"><i class="bi bi-info-circle-fill"></i> Como Funciona</h6>
                                 </div>
+                                
+                                <div class="tutorial-step" style="animation-delay: 100ms">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 mr-3">
+                                        <span class="font-bold text-sm text-white">1</span>
+                                    </div>
+                                    <div>Cole o link (Freepik ou Designi) no campo.</div>
+                                </div>
+
+                                <div class="tutorial-step" style="animation-delay: 200ms">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 mr-3">
+                                        <span class="font-bold text-sm text-white">2</span>
+                                    </div>
+                                    <div>Clique em "Baixar Premium". Se o link for inválido, um aviso aparecerá.</div>
+                                </div>
+
+                                <div class="tutorial-step" style="animation-delay: 300ms">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 mr-3">
+                                        <span class="font-bold text-sm text-white">3</span>
+                                    </div>
+                                    <div><strong>Freepik:</strong> Se válido, aguarde o processamento. O link para download aparecerá no histórico.</div>
+                                </div>
+
+                                <div class="tutorial-step" style="animation-delay: 400ms">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 mr-3">
+                                        <span class="font-bold text-sm text-white">4</span>
+                                    </div>
+                                    <div><strong>Designi:</strong> Aguarde o processamento. O link para download aparecerá no histórico.</div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="tutorial-section mx-3 mb-3"> <h6><i class="bi bi-info-circle-fill"></i> Como Funciona</h6>
-                             <div class="tutorial-step"><i class="bi bi-input-cursor-text"></i> 1. Cole o link (Freepik ou Designi) no campo.</div>
-                             <div class="tutorial-step"><i class="bi bi-mouse"></i> 2. Clique em "Baixar". Se o link for inválido, um aviso aparecerá.</div>
-                             <div class="tutorial-step"><i class="bi bi-clock-history"></i> 3. <strong>Freepik:</strong> Se válido, aguarde ("Processando..."). O link aparecerá no histórico.</div>
-                             <div class="tutorial-step"><i class="bi bi-hourglass-split"></i> 4. <strong>Designi:</strong> Se válido, aguarde ("Processando..."). O resultado final aparecerá no histórico.</div>
-                             <div class="tutorial-step"><i class="bi bi-bar-chart-line-fill"></i> 5. <strong>Limite:</strong> Verifique seu status de downloads diários acima.</div>
+                        <!-- History Section -->
+                        <div id="uploadHistory" class="mt-5 glass-card">
+                            <div id="uploadHistoryHeader">
+                                <h6>
+                                    <i class="bi bi-clock-history"></i> Histórico de Downloads
+                                </h6>
+                                <button id="clearHistoryBtn" disabled>
+                                    <i class="bi bi-trash3-fill me-1"></i> Limpar
+                                </button>
+                            </div>
+                            
+                            <div id="historyItems" class="p-4">
+                                <!-- Itens do histórico serão adicionados dinamicamente aqui -->
+                            </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
     <footer class="footer">
         <div class="footer-content">
-            <div class="footer-made-with">Feito com  <i class="bi bi-heart-fill text-danger"></i> e rapadura </div>
-            <div class="footer-links">
-                <a href="https://www.instagram.com/rapadurastock/" target="_blank" title="Instagram Rapadura Stock">
-                    <i class="bi bi-instagram"></i> Instagram
-                </a>
-                <a href="mailto:suporte@rapadurastock.com" title="Suporte por E-mail">
-                    <i class="bi bi-envelope-fill"></i> Suporte
-                </a>
+            <div class="footer-brand">© 2023 Rapadura Stock - Todos os direitos reservados</div>
+            <div class="footer-made-with">
+                Feito com <i class="bi bi-heart-fill"></i> no Brasil
             </div>
-            <div class="footer-brand">Rapadura Stock - BETA V1</div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        const activePolls = {};
-        const HISTORY_KEY = 'rapaduraStockHistory';
-        const MAX_HISTORY_ITEMS = 20;
-
-        // --- Mensagens divertidas (Inalterado) ---
-        const mensagensFun = [ /* ... Manteve as mensagens ... */ ];
-        function getMensagemFun() { /* ... Manteve a função ... */ }
-
-        // --- Funções de Histórico (localStorage, formatTimestamp, renderHistoryItem, loadHistoryFromStorage, toggleClearHistoryButton) ---
-        // --- Mantidas exatamente como na versão anterior ---
-        function getHistory() { const storedHistory = localStorage.getItem(HISTORY_KEY); return storedHistory ? JSON.parse(storedHistory) : []; }
-        function saveHistory(historyArray) { const limitedHistory = historyArray.slice(0, MAX_HISTORY_ITEMS); localStorage.setItem(HISTORY_KEY, JSON.stringify(limitedHistory)); toggleClearHistoryButton(); }
-        function updateHistoryItemInStorage(itemId, newHtml) { let history = getHistory(); const itemIndex = history.findIndex(item => item.id === itemId); if (itemIndex > -1) { history[itemIndex].html = newHtml; saveHistory(history); } }
-        function addHistoryItemToStorage(itemData) { let history = getHistory(); history.unshift(itemData); saveHistory(history); }
-        function formatTimestamp(isoString) { if (!isoString) return ''; try { const date = new Date(isoString); return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { console.error("Erro ao formatar timestamp:", e); return ''; } }
-        function renderHistoryItem(itemData) { const historyDiv = document.getElementById('historyItems'); if (!historyDiv || !itemData || !itemData.html) return null; const newHistoryItem = document.createElement('div'); newHistoryItem.className = 'card mb-3 history-item'; if (itemData.id) { newHistoryItem.id = `history-item-${itemData.id}`; } const timestampHtml = `<span class="history-timestamp">${formatTimestamp(itemData.timestamp)}</span>`; const isAlert = itemData.html.includes('class="alert '); if (isAlert) { if (itemData.html.includes('alert-success')) newHistoryItem.classList.add('alert-success'); else if (itemData.html.includes('alert-danger')) newHistoryItem.classList.add('alert-danger'); else if (itemData.html.includes('alert-warning')) newHistoryItem.classList.add('alert-warning'); else if (itemData.html.includes('alert-info')) newHistoryItem.classList.add('alert-info'); newHistoryItem.innerHTML = `<div class="card-body p-0">${itemData.html}${timestampHtml}</div>`; } else { newHistoryItem.innerHTML = `<div class="card-body">${itemData.html}${timestampHtml}</div>`; } historyDiv.appendChild(newHistoryItem); return newHistoryItem; }
-        function loadHistoryFromStorage() { const history = getHistory(); const historyDiv = document.getElementById('historyItems'); if(historyDiv) historyDiv.innerHTML = ''; history.forEach(itemData => renderHistoryItem(itemData)); toggleClearHistoryButton(); }
-        function toggleClearHistoryButton() { const clearBtn = document.getElementById('clearHistoryBtn'); if (clearBtn) { const history = getHistory(); clearBtn.disabled = history.length === 0; } }
-
-
-        // --- Função para atualizar display do status (Inalterado) ---
-        function updateStatusDisplay(statusHtml) { /* ... Manteve a função ... */ }
-
-        // --- Função para buscar e atualizar status (Inalterado) ---
-        async function fetchAndUpdateStatus() { /* ... Manteve a função ... */ }
-
-        // --- Função para adicionar item ao histórico (Inalterado desde a última versão) ---
-        function addHistoryItem(contentHtml, itemId = null) {
-            const timestamp = new Date().toISOString();
-            const itemData = { html: contentHtml, id: itemId, timestamp: timestamp };
-            const historyDiv = document.getElementById('historyItems');
-            if (!historyDiv) return null;
-
-            const newHistoryItem = document.createElement('div');
-            newHistoryItem.className = 'card mb-3 history-item';
-            if (itemData.id) { newHistoryItem.id = `history-item-${itemData.id}`; }
-
-            const timestampHtml = `<span class="history-timestamp">${formatTimestamp(itemData.timestamp)}</span>`;
-            const isAlert = itemData.html.includes('class="alert ');
-
-            if (isAlert) {
-                 if (itemData.html.includes('alert-success')) newHistoryItem.classList.add('alert-success');
-                 else if (itemData.html.includes('alert-danger')) newHistoryItem.classList.add('alert-danger');
-                 else if (itemData.html.includes('alert-warning')) newHistoryItem.classList.add('alert-warning');
-                 else if (itemData.html.includes('alert-info')) newHistoryItem.classList.add('alert-info');
-                newHistoryItem.innerHTML = `<div class="card-body p-0">${itemData.html}${timestampHtml}</div>`;
-            } else {
-                newHistoryItem.innerHTML = `<div class="card-body">${itemData.html}${timestampHtml}</div>`;
-            }
-
-            historyDiv.insertBefore(newHistoryItem, historyDiv.firstChild);
-            addHistoryItemToStorage(itemData);
-            return newHistoryItem;
+        // Função para mostrar/esconder elemento de loading no botão
+        function setLoading(button, isLoading) {
+            button.disabled = isLoading;
         }
 
-        // --- Função para reabilitar botão (Helper - Inalterado) ---
-        function enableButton(button) { /* ... Manteve a função ... */ }
-
-        // --- Função de Polling (Inalterado desde a última versão) ---
-        function pollJobStatus(jobId) { /* ... Manteve a função ... */ }
-
-        // --- Validação de Link (Função Auxiliar) ---
-        // Verifica se o link é minimamente válido (começa com http e contém domínio)
-        function isLinkValid(link, validDomains) {
-            if (!link) return false;
-            const lowerLink = link.toLowerCase();
-            if (!lowerLink.startsWith('http://') && !lowerLink.startsWith('https://')) {
-                return false;
-            }
-            return validDomains.some(domain => lowerLink.includes(domain));
-        }
-
-        // --- Event Listener Formulário Freepik (Validação no Clique) ---
-        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Previne envio padrão
-            const form = this;
-            const linkInput = document.getElementById('freepik_link');
-            const link = linkInput.value.trim();
-            const submitButton = form.querySelector('button[type="submit"]');
-            const normalState = submitButton.querySelector('.normal-state');
-            const loadingState = submitButton.querySelector('.loading');
-            const freepikDomains = ['freepik.com'];
-
-            // 1. Validar o link ANTES de fazer qualquer coisa
-            if (!isLinkValid(link, freepikDomains)) {
-                addHistoryItem('<div class="alert alert-warning mb-0">⚠️ Por favor, insira um link válido do Freepik (ex: https://www.freepik.com/...).</div>');
-                // Não desabilita o botão, não mostra loading, apenas retorna
-                return;
-            }
-
-            // 2. Se o link for válido, prosseguir com o processo
-            submitButton.disabled = true;
-            normalState.style.display = 'none';
-            loadingState.style.display = 'inline-block'; // Mostra "Processando..."
-
+        // Carregar status do usuário
+        async function loadUserStatus() {
             try {
-                const response = await fetch('/upload', { method: 'POST', body: new FormData(form) });
-                const dataHtml = await response.text();
-                addHistoryItem(dataHtml); // Adiciona resultado (sucesso/erro do backend)
-                if (response.ok) {
-                    linkInput.value = ''; // Limpa input se backend respondeu OK
-                }
-                await fetchAndUpdateStatus();
-            } catch (error) {
-                console.error('Erro fetch /upload:', error);
-                 const errorHtml = `<div class="alert alert-danger mb-0">Erro de comunicação com o servidor: ${error.message}</div>`;
-                addHistoryItem(errorHtml);
-                await fetchAndUpdateStatus();
-            } finally {
-                 // Reabilita o botão SEMPRE ao final do processo
-                 enableButton(submitButton);
-            }
-        });
-
-        // --- Event Listener Formulário Designi (Validação no Clique) ---
-         document.getElementById('designiForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Previne envio padrão
-            const form = this;
-            const linkInput = document.getElementById('designi_link');
-            const link = linkInput.value.trim();
-            const submitButton = form.querySelector('button[type="submit"]');
-            const normalState = submitButton.querySelector('.normal-state');
-            const loadingState = submitButton.querySelector('.loading');
-            const designiDomains = ['designi.']; // Verificação flexível
-
-            // 1. Validar o link ANTES de fazer qualquer coisa
-            if (!isLinkValid(link, designiDomains)) {
-                addHistoryItem('<div class="alert alert-warning mb-0">⚠️ Por favor, insira um link válido do Designi.</div>');
-                 // Não desabilita o botão, não mostra loading, apenas retorna
-                return;
-            }
-
-            // 2. Se o link for válido, prosseguir com o processo
-            submitButton.disabled = true;
-            normalState.style.display = 'none';
-            loadingState.style.display = 'inline-block'; // Mostra "Processando..."
-
-            try {
-                const response = await fetch('/download-designi', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: link })
-                });
+                const response = await fetch('/api/user/status');
                 const data = await response.json();
 
-                if (response.ok && data.success && data.job_id) {
-                    // Adiciona mensagem inicial e inicia polling
-                    // O botão permanecerá desabilitado até o polling terminar
-                    const initialMsgHtml = `<div class="alert alert-info mb-0"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${data.message || 'Processo iniciado...'} <span class="text-muted small">(ID: ${data.job_id})</span></div>`;
-                    addHistoryItem(initialMsgHtml, data.job_id);
-                    linkInput.value = '';
-                    pollJobStatus(data.job_id); // pollJobStatus cuidará de reabilitar o botão
-                } else {
-                    // Erro ao iniciar o job no backend
-                    const errorHtml = `<div class="alert alert-danger mb-0">Erro ao iniciar download: ${data.error || `Erro ${response.status}. Verifique o link.`}</div>`;
-                    addHistoryItem(errorHtml);
-                    enableButton(submitButton); // Reabilita botão se falhou ao iniciar
-                    await fetchAndUpdateStatus();
-                }
+                // Atualize o status com os dados recebidos
+                const statusHTML = `
+                    <div class="alert" style="color: var(--cor-texto);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-person-circle me-2"></i> 
+                                ${data.message}
+                            </div>
+                            <div>
+                                <span class="badge-downloads">
+                                    ${data.downloadsAvailable} downloads disponíveis
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('userStatus').innerHTML = statusHTML;
             } catch (error) {
-                // Erro de rede ao tentar iniciar o job
-                console.error('Erro fetch /download-designi:', error);
-                const errorHtml = `<div class="alert alert-danger mb-0">Erro de comunicação com o servidor: ${error.message}</div>`;
-                addHistoryItem(errorHtml);
-                enableButton(submitButton); // Reabilita botão em erro de rede
-                await fetchAndUpdateStatus();
+                console.error('Erro ao carregar status:', error);
             }
-             // Removido finally daqui, pois o botão só deve ser reabilitado
-             // se o polling não iniciar ou se der erro na comunicação inicial.
-             // Se o polling iniciar, ele é responsável por reabilitar.
-        });
-
-
-        // --- Limpar Histórico (Inalterado) ---
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-        if (clearHistoryBtn) {
-            clearHistoryBtn.addEventListener('click', () => {
-                if (confirm('Tem certeza que deseja limpar todo o histórico de downloads?')) {
-                    const historyDiv = document.getElementById('historyItems');
-                    if(historyDiv) historyDiv.innerHTML = '';
-                    localStorage.removeItem(HISTORY_KEY);
-                    toggleClearHistoryButton();
-                }
-            });
         }
 
-        // --- Inicialização (Remove validação inicial dos inputs) ---
-        window.addEventListener('DOMContentLoaded', () => {
-            fetchAndUpdateStatus();
-            loadHistoryFromStorage();
-            // Botões agora começam habilitados (removido disabled do HTML)
-            // Não precisamos mais validar/desabilitar no início.
+        // Carregar histórico de uploads
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/download/history');
+                const data = await response.json();
+                
+                // Se houver histórico, habilite o botão de limpar
+                document.getElementById('clearHistoryBtn').disabled = data.history.length === 0;
+                
+                // Limpar histórico atual
+                const historyItems = document.getElementById('historyItems');
+                historyItems.innerHTML = '';
+                
+                // Adicionar itens do histórico
+                if (data.history.length > 0) {
+                    for (const item of data.history) {
+                        addHistoryItem(item);
+                    }
+                } else {
+                    // Mostrar mensagem quando não há histórico
+                    historyItems.innerHTML = `
+                        <div class="text-center py-4">
+                            <div class="bg-gradient-to-r from-primary/20 to-primary/5 w-20 h-20 rounded-full inline-flex items-center justify-center mb-4 glow-effect">
+                                <i class="bi bi-clock-history text-2xl text-white/70"></i>
+                            </div>
+                            <h4 class="text-white font-semibold text-xl mb-2">Nenhum download recente</h4>
+                            <p class="text-white/50 max-w-md mx-auto">
+                                Seu histórico de downloads será exibido aqui. Comece baixando seu primeiro arquivo premium!
+                            </p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+            }
+        }
+
+        // Adicionar item ao histórico
+        function addHistoryItem(item) {
+            const historyItems = document.getElementById('historyItems');
+            
+            let statusClass, statusIcon, statusText;
+            switch (item.status) {
+                case 'success':
+                    statusClass = 'from-green-500/20 to-green-600/5';
+                    statusIcon = '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/30 to-green-500/10 flex items-center justify-center shadow-md glow-effect"><i class="bi bi-check-lg text-green-400"></i></div>';
+                    statusText = 'Download concluído';
+                    break;
+                case 'error':
+                    statusClass = 'from-red-500/20 to-red-600/5';
+                    statusIcon = '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/30 to-red-500/10 flex items-center justify-center shadow-md glow-effect"><i class="bi bi-x-lg text-red-400"></i></div>';
+                    statusText = 'Falha no download';
+                    break;
+                case 'pending':
+                default:
+                    statusClass = 'from-blue-500/20 to-blue-600/5';
+                    statusIcon = '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/30 to-blue-500/10 flex items-center justify-center shadow-md"><svg class="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+                    statusText = 'Processando download...';
+            }
+            
+            // Determinar a hora/data formatada
+            const date = new Date(item.timestamp);
+            const formattedDate = new Intl.DateTimeFormat('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+            
+            // Criar o cartão de histórico com o estilo moderno
+            let itemHTML = `
+                <div class="glass-card rounded-xl overflow-hidden fade-border float-in" data-id="${item.id}" style="animation-delay: 0.2s; margin-bottom: 1rem;">
+                    <div class="bg-gradient-to-r ${statusClass} p-0.5">
+                        <div class="bg-black/40 p-4">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        ${statusIcon}
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="font-medium text-white mb-1">${statusText}</div>
+                                        <div class="text-white-50 small text-truncate" style="max-width: 300px;">${item.url}</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3 ms-0 ms-md-3">
+                                    <span class="history-timestamp">${formattedDate}</span>
+            `;
+            
+            // Adicionar botão de download para itens com sucesso
+            if (item.status === 'success' && item.fileUrl) {
+                itemHTML += `
+                    <a href="${item.fileUrl}" target="_blank" rel="noopener noreferrer" 
+                       class="download-btn">
+                        <i class="bi bi-download"></i> Baixar
+                    </a>
+                `;
+            }
+            
+            // Adicionar mensagem de erro para itens com falha
+            if (item.status === 'error' && item.error) {
+                itemHTML += `
+                    <div class="small text-danger mt-2 mt-md-0">${item.error}</div>
+                `;
+            }
+            
+            // Fechar a estrutura do cartão
+            itemHTML += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Adicionar ao histórico (no início)
+            historyItems.insertAdjacentHTML('afterbegin', itemHTML);
+        }
+
+        // Enviar link para download
+        async function submitDownload(type, url) {
+            try {
+                // Gerar um ID temporário para o item pendente
+                const tempId = 'temp-' + Date.now();
+                
+                // Criar objeto do item temporário
+                const tempItem = {
+                    id: tempId,
+                    url: url,
+                    status: 'pending',
+                    timestamp: new Date().toISOString(),
+                    type: type
+                };
+                
+                // Adicionar ao histórico
+                addHistoryItem(tempItem);
+                
+                // Habilitar botão Limpar Histórico
+                document.getElementById('clearHistoryBtn').disabled = false;
+                
+                // Verificar se há uma mensagem "nenhum download" e remover
+                const emptyHistoryMessage = document.querySelector('#historyItems .text-center');
+                if (emptyHistoryMessage) {
+                    emptyHistoryMessage.remove();
+                }
+                
+                // Enviar requisição para a API
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ type, url })
+                });
+                
+                const result = await response.json();
+                
+                // Remover item temporário
+                const tempElement = document.querySelector(`[data-id="${tempId}"]`);
+                if (tempElement) {
+                    tempElement.remove();
+                }
+                
+                // Recarregar histórico para mostrar o item real
+                await loadHistory();
+                
+                return result;
+            } catch (error) {
+                console.error('Erro ao enviar download:', error);
+                
+                // Se ocorrer um erro, mostrar um item de erro no histórico
+                const errorItem = {
+                    id: 'error-' + Date.now(),
+                    url: url,
+                    status: 'error',
+                    timestamp: new Date().toISOString(),
+                    type: type,
+                    error: error.message || 'Erro ao processar o download'
+                };
+                
+                addHistoryItem(errorItem);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Formulário do Freepik
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const link = document.getElementById('freepik_link').value.trim();
+            if (!link) return;
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            setLoading(submitBtn, true);
+            
+            await submitDownload('freepik', link);
+            document.getElementById('freepik_link').value = '';
+            
+            setLoading(submitBtn, false);
         });
 
+        // Formulário do Designi
+        document.getElementById('designiForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const link = document.getElementById('designi_link').value.trim();
+            if (!link) return;
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            setLoading(submitBtn, true);
+            
+            await submitDownload('designi', link);
+            document.getElementById('designi_link').value = '';
+            
+            setLoading(submitBtn, false);
+        });
+
+        // Limpar histórico
+        document.getElementById('clearHistoryBtn').addEventListener('click', async function() {
+            if (confirm('Tem certeza que deseja limpar todo o histórico?')) {
+                this.disabled = true;
+                this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Limpando...';
+                
+                try {
+                    await fetch('/api/download/history', { method: 'DELETE' });
+                    
+                    // Mostrar mensagem de histórico vazio
+                    document.getElementById('historyItems').innerHTML = `
+                        <div class="text-center py-4">
+                            <div class="bg-gradient-to-r from-primary/20 to-primary/5 w-20 h-20 rounded-full inline-flex items-center justify-center mb-4 glow-effect">
+                                <i class="bi bi-clock-history text-2xl text-white/70"></i>
+                            </div>
+                            <h4 class="text-white font-semibold text-xl mb-2">Nenhum download recente</h4>
+                            <p class="text-white/50 max-w-md mx-auto">
+                                Seu histórico de downloads será exibido aqui. Comece baixando seu primeiro arquivo premium!
+                            </p>
+                        </div>
+                    `;
+                    
+                    this.innerHTML = '<i class="bi bi-trash3-fill me-1"></i> Limpar';
+                    this.disabled = true;
+                } catch (error) {
+                    console.error('Erro ao limpar histórico:', error);
+                    this.innerHTML = '<i class="bi bi-trash3-fill me-1"></i> Limpar';
+                    this.disabled = false;
+                    alert('Erro ao limpar histórico. Tente novamente.');
+                }
+            }
+        });
+
+        // Carregar dados iniciais
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserStatus();
+            loadHistory();
+        });
     </script>
 </body>
 </html>
